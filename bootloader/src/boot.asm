@@ -77,7 +77,7 @@ init_pm:
 
 	hlt
 
-.success_init_pm_msg db "init_pm successful", 13, 10, 0
+.success_init_pm_msg db "init_pm successful", 0
 
 ; Imports for sector 2 (32 bits)
 

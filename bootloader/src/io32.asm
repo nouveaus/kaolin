@@ -17,7 +17,7 @@ print_vga:
 
         mov [edx], ax
 
-        inc edx,
+        inc ebx
         add edx, 2
 
         jmp .print_vga_loop

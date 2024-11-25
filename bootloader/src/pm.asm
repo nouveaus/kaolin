@@ -1,6 +1,6 @@
 [bits 16]
 
-
+gdt_beginning:
 .gdt_start:
 	dd 0x0
 	dd 0x0
@@ -24,8 +24,8 @@
 .gdt_end:
 
 gdt_descriptor:
-	dw .gdt_end - .gdt_start
-	dd .gdt_start
+	dw gdt_beginning.gdt_end - gdt_beginning.gdt_start
+	dd gdt_beginning.gdt_start
 
 init_vga:
 	pusha
@@ -49,5 +49,5 @@ switch_to_pm:
 	popa
 	ret
 
-CODE_SEG equ .gdt_code - .gdt_start
-DATA_SEG equ .gdt_data - .gdt_start
+CODE_SEG equ gdt_beginning.gdt_code - gdt_beginning.gdt_start
+DATA_SEG equ gdt_beginning.gdt_data - gdt_beginning.gdt_start

@@ -9,7 +9,7 @@ enable_a20:
 ; fallback to keyboard if fails
 	jc .enable_a20_old
 
-.enable_a20_end
+.enable_a20_end:
 
 	call .test_a20
 
@@ -60,7 +60,7 @@ enable_a20:
   	test  al, 2
   	jnz .wait_2_a20
 
-test_a20:
+.test_a20:
   	pusha
 
   	mov ax, 0x0000

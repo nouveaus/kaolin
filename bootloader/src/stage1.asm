@@ -6,8 +6,8 @@ second_segement_start:
 success_disk_load:
 	pusha
 
-	mov bx, .success_disk_load_msg
-	call print
+	mov	bx, .success_disk_load_msg
+	call	print
 
 	popa
 	ret

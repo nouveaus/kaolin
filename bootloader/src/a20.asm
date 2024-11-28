@@ -45,7 +45,7 @@ enable_a20:
 
 	call	.wait_a20
 	sti
-		
+
 	jmp	.enable_a20_end
 
 

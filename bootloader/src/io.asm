@@ -1,6 +1,6 @@
 [bits 16]
 
-; bx = address of string 
+; bx = address of string
 print:
 	pusha
 
@@ -9,7 +9,7 @@ print:
 .print_loop:
 	mov	al,	[bx]
 	test	al,	al
-	
+
 	je	.print_loop_end
 
 	int	0x10

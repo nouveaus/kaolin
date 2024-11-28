@@ -6,7 +6,7 @@ second_segement_start:
 success_disk_load:
 	pusha
 
-	mov	bx, .success_disk_load_msg
+	mov	bx,	.success_disk_load_msg
 	call	print
 
 	popa
@@ -24,21 +24,21 @@ success_disk_load:
 ; Move to own file later
 init_pm:
 
-	mov ax, DATA_SEG
-	mov ds, ax
-	mov ss, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
+	mov	ax,	DATA_SEG
+	mov	ds,	ax
+	mov	ss,	ax
+	mov	es,	ax
+	mov	fs,	ax
+	mov	gs,	ax
 
 ; New stack
-	mov ebp, 0x90000
-	mov esp, ebp
+	mov	ebp,	0x90000
+	mov	esp,	ebp
 
 ; protected mode is on from here onwards
 
-	mov ebx, .success_init_pm_msg
-	call print_vga
+	mov	ebx,	.success_init_pm_msg
+	call	print_vga
 
 	hlt
 

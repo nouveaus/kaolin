@@ -4,18 +4,18 @@
 print:
 	pusha
 
-	mov ah, 0x0E
+	mov	ah,	0x0E
 
 .print_loop:
-	mov al, [bx]
-	test al, al
+	mov	al,	[bx]
+	test	al,	al
 	
-	je .print_loop_end
+	je	.print_loop_end
 
-  	int 0x10
- 	inc bx
+	int	0x10
+	inc	bx
 
-  	jmp .print_loop
+	jmp	.print_loop
 
 .print_loop_end:
 	popa
@@ -26,22 +26,22 @@ print:
 disk_load:
 	pusha
 
-	mov ah, 0x02
-	mov al, dh
-	mov ch, 0x00
-	mov dh, 0x00
-	mov cl, 0x02
+	mov	ah,	0x02
+	mov	al,	dh
+	mov	ch,	0x00
+	mov	dh,	0x00
+	mov	cl,	0x02
 
-	int 0x13
+	int	0x13
 
-	jc .disk_err
+	jc	.disk_err
 
 	popa
 	ret
 
 .disk_err:
-	mov bx, .disk_err_msg
-	call print
+	mov	bx,	.disk_err_msg
+	call	print
 	hlt
 
 .disk_err_msg: db "disk_load error!", 0

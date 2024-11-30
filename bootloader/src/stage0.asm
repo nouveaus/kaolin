@@ -12,6 +12,11 @@
 	mov dh, 1
 	call disk_load
 
+;	prepare kernel space
+	mov	bx,	KERNEL_OFFSET
+	mov	dh,	2
+	call	disk_load
+
 	call enable_a20
 
 	mov bx, success_a20_msg

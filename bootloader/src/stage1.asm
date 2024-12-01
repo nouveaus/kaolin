@@ -40,7 +40,8 @@ init_pm:
 	mov	ebx,	.success_init_pm_msg
 	call	print_vga
 
-	call 0x2000
+	; finally enter the kernel in 32-bit protected mode
+	call	KERNEL_ENTRY
 
 	; we shouldn't have gotten here, disable interrupts and sleep
 	cli

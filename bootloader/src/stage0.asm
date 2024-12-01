@@ -14,8 +14,8 @@
 
 	; todo: why do you always reload the first sector?
 	; todo: workaround - load 2 sectors, 1 behind the intended buffer...
-	mov	bx,	0x2000 - 512
-	mov	dh,	2
+	mov	bx,	KERNEL_ENTRY - 512
+	mov	dh,	1 + KERNEL_SECTORS
 	call	disk_load
 
 	call	enable_a20

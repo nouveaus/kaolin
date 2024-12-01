@@ -1,5 +1,10 @@
 #include <stdint.h>
 
+/*
+ * The entry point after the bootloader finishes setting up x86 32-bit protected mode.
+ *
+ * This **must** be the first symbol of the kernel code output file, at 0x2000.
+ */
 void _Noreturn kernel_main(void) {
     volatile uint16_t *vga = (volatile uint16_t *) 0xB8000;
     unsigned i = 0;

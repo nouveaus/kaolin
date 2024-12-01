@@ -5,9 +5,13 @@ set(OUTPUT "boot.bin")
 set(INCLUDES "src/")
 set(DEPFILE "${OUTPUT}.d")
 
+set(CMAKE_ASM_NASM_FLAGS -f bin -I "${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDES}")
+
 add_custom_command(
-        OUTPUT "${OUTPUT}" "${DEPFILE}"
-        COMMAND "${CMAKE_ASM_NASM_COMPILER}" ${CMAKE_ASM_NASM_FLAGS} -f bin -I"${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDES}" -MD "${DEPFILE}"
+        OUTPUT "${OUTPUT}"
+        COMMAND "${CMAKE_ASM_NASM_COMPILER}" ${CMAKE_ASM_NASM_FLAGS} -M -MF "${DEPFILE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/${SRC}" -o "${OUTPUT}"
+        COMMAND "${CMAKE_ASM_NASM_COMPILER}" ${CMAKE_ASM_NASM_FLAGS}
                 "${CMAKE_CURRENT_SOURCE_DIR}/${SRC}" -o "${OUTPUT}"
         DEPENDS "${SRC}"
         DEPFILE "${DEPFILE}"

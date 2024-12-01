@@ -1,11 +1,16 @@
 #include <stdint.h>
 
+void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
+
+static void print_string(unsigned index, uint16_t mask, const char *message);
+
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected mode.
- *
- * This **must** be the first symbol of the kernel code output file, at 0x2000.
  */
 void _Noreturn kernel_main(void) {
+    print_string(100, 0x0e00, "data segment works now btw");
+    print_string(200, 0x0900, "another one");
+
     volatile uint16_t *vga = (volatile uint16_t *) 0xB8000;
     unsigned i = 0;
 
@@ -23,5 +28,14 @@ void _Noreturn kernel_main(void) {
         for (unsigned s = 0; s != 100000000; s++) {
             asm volatile(""::);
         }
+    }
+}
+
+void print_string(unsigned index, uint16_t mask, const char *message) {
+    volatile uint16_t *vga = (volatile uint16_t *) 0xB8000;
+    char c;
+
+    for (unsigned i = 0; (c = message[i]); i++) {
+        vga[index + i] = c | mask;
     }
 }

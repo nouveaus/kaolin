@@ -1,3 +1,5 @@
+set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel.ld")
+
 add_executable(kernel src/kernel_main.c)
 
 set_target_properties(kernel PROPERTIES
@@ -12,6 +14,9 @@ target_compile_options(kernel PRIVATE
 
 target_link_options(kernel PRIVATE
         -nostdlib               # Not hosted
-        -Ttext=0x2000           # Code is relocated
-        -Wl,--oformat=binary    # Raw code file
+        -T "${LINKER_SCRIPT}"   # Linker script (relocations, etc.)
+        -fno-lto                # LTO causes ld segfaults at the moment
 )
+
+# Place a dependency on the linker script
+set_target_properties(kernel PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})

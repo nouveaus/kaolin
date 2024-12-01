@@ -40,6 +40,10 @@ init_pm:
 	mov	ebx,	.success_init_pm_msg
 	call	print_vga
 
+	call 0x2000
+
+	; we shouldn't have gotten here, disable interrupts and sleep
+	cli
 	hlt
 
 .success_init_pm_msg db "init_pm successful", 0
@@ -48,4 +52,4 @@ init_pm:
 
 %include "io32.asm"
 
-times 510-($-second_segement_start) db 0
+times 512-($-second_segement_start) db 0

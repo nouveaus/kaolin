@@ -12,6 +12,12 @@
 	mov	dh,	1
 	call	disk_load
 
+	; todo: why do you always reload the first sector?
+	; todo: workaround - load 2 sectors, 1 behind the intended buffer...
+	mov	bx,	0x2000 - 512
+	mov	dh,	2
+	call	disk_load
+
 	call	enable_a20
 
 	mov	bx,	success_a20_msg

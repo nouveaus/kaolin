@@ -15,7 +15,3 @@ add_custom_command(
 )
 
 add_custom_target(bootloader ALL DEPENDS "${OUTPUT}")
-
-add_custom_target(run
-    COMMAND qemu-system-x86_64 -fda ${OUTPUT}
-)

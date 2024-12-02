@@ -12,6 +12,8 @@
 ;	mov	dh,	1
 ;	call	disk_load
 
+	call	lba_check
+
 	mov	si, DAPACK
 	call	disk_load_lba
 

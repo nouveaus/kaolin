@@ -66,3 +66,28 @@ disk_load_lba:
 	hlt
 
 .disk_lba_err_msg: db "disk_load_lba error!", 0
+
+lba_check:
+	pusha
+	xor	ax, ax
+	mov	es, ax
+;	magic number for EDD heck
+	mov	bx, 0x55AA
+	mov	ah, 0x41
+	mov	dl, 0x80
+	int	0x13
+
+	jc	.lba_check_err
+	
+	cmp	bx, 0xAA55
+	jne	.lba_check_err
+
+	popa
+	ret
+
+.lba_check_err:
+	mov	bx, .lba_check_err_msg
+	call	print
+	hlt
+
+.lba_check_err_msg: db "lba not supported", 0

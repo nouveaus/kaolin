@@ -46,3 +46,23 @@ disk_load:
 
 .disk_err_msg: db "disk_load error!", 0
 
+; si = address of disk address packet
+; automatically loads to drive 0
+disk_load_lba:
+	pusha
+
+	mov	ah, 0x42
+	mov	dl, 0x80
+	int	0x13
+	; carry bit set if err
+	jc	.disk_lba_err
+
+	popa
+	ret
+
+.disk_lba_err:
+	mov	bx, .disk_lba_err_msg
+	call	print
+	hlt
+
+.disk_lba_err_msg: db "disk_load_lba error!", 0

@@ -13,5 +13,6 @@ add_custom_command(
 )
 
 add_custom_target(os ALL DEPENDS "os.img")
+add_dependencies(os bootloader kernel)
 
 add_custom_target(run COMMAND qemu-system-x86_64 -fda "os.img" DEPENDS os)

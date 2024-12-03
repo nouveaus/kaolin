@@ -10,6 +10,12 @@
 
 	mov	bx,	0x7e00
 	mov	dh,	1
+	mov	cl,	0x02
+	call	disk_load
+
+	mov	bx,	KERNEL_ENTRY
+	mov	dh,	KERNEL_SECTORS
+	mov	cl,	0x03
 	call	disk_load
 
 	call	enable_a20

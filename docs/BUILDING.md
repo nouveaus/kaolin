@@ -45,3 +45,11 @@ $ cmake --build build
 ```
 
 ## Testing
+
+The OS image will be produced in `build/os.img`.
+
+There is a task to automatically launch this with QEMU, if available:
+
+```
+$ cmake --build build -t run
+```

@@ -39,13 +39,15 @@ init_pm:
 
 	mov	ebx,	.success_init_pm_msg
 	call	print_vga
+	call	cpuid_avaliability
 
-	hlt
+	jmp	$
 
 .success_init_pm_msg db "init_pm successful", 0
 
 ; Imports for sector 2 (32 bits)
 
 %include "io32.asm"
+%include "cpuid.asm"
 
 times 510-($-second_segement_start) db 0

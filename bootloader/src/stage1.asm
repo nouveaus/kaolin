@@ -39,6 +39,7 @@ init_pm:
 
 	mov	ebx,	.success_init_pm_msg
 	call	print_vga
+	call	cpuid_avaliability
 
 	; finally enter the kernel in 32-bit protected mode
 	call	KERNEL_ENTRY
@@ -52,5 +53,6 @@ init_pm:
 ; Imports for sector 2 (32 bits)
 
 %include "io32.asm"
+%include "cpuid.asm"
 
 times 512-($-second_segement_start) db 0

@@ -13,8 +13,8 @@ void _Noreturn kernel_main(void) {
     // print_string(100, 0x0e00, "data segment works now btw");
     // print_string(200, 0x0900, "another one");
 
-    // volatile uint16_t *vga = (volatile uint16_t *) 0xB8000;
-    // unsigned i = 0;
+    volatile uint16_t *vga = (volatile uint16_t *) 0xB8000;
+    unsigned i = 0;
 
     terminal_initialize();
 

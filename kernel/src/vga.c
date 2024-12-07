@@ -8,6 +8,9 @@
 size_t terminal_row = 0;
 size_t terminal_column = 0;
 uint8_t terminal_color;
+
+#define ADDR_VIDEO_MEMORY 0xB8000
+
 volatile uint16_t *terminal_buffer = (volatile uint16_t *)ADDR_VIDEO_MEMORY;
 
 #define VGA_WIDTH 80
@@ -19,7 +22,7 @@ static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
 }
 
 static inline uint16_t vga_entry(unsigned char c, uint8_t color) {
-    return (uint16_t) (color << 8) | c;
+    return (uint16_t) (color << 8) | (uint16_t) c;
 }
 
 size_t strlen(const char *s) {
@@ -29,7 +32,7 @@ size_t strlen(const char *s) {
 }
 
 void terminal_initialize(void) {
-    terminal_color = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    terminal_color = vga_entry_color(VGA_COLOR_BROWN, VGA_COLOR_BLACK);
     for (size_t y = 0; y < VGA_HEIGHT; y++) {
         for (size_t x = 0; x < VGA_WIDTH; x++) {
             terminal_buffer[y * VGA_WIDTH + x] = vga_entry(' ', terminal_color);
@@ -49,10 +52,16 @@ void terminal_scroll(void) {
     // no clue if this works
     for (size_t y = 1; y < VGA_HEIGHT; y++) {
         for (size_t x = 0; x < VGA_WIDTH; x++) {
-            char c = terminal_buffer[y * VGA_WIDTH + x];
-            terminal_buffer[(y - 1) * VGA_WIDTH + x] = vga_entry(c, terminal_color);
+            char c = terminal_buffer[y * VGA_WIDTH + x] & 0xFF;
+            char color = (terminal_buffer[y * VGA_WIDTH + x] >> 8) & 0xFF;
+            terminal_putentryat(c, color, x, y - 1);
         }
     }
+    // final line is cleared
+    for (size_t x = 0; x < VGA_WIDTH; x++) {
+        terminal_putentryat(' ', terminal_color, x, VGA_HEIGHT - 1);
+    }
+    terminal_row = VGA_HEIGHT - 1;
 }
 
 void terminal_putchar(char c) {
@@ -61,7 +70,9 @@ void terminal_putchar(char c) {
     if (++terminal_column == VGA_WIDTH) {
         newline:
         terminal_column = 0;
-        if (++terminal_row == VGA_HEIGHT) terminal_scroll();
+        if (++terminal_row == VGA_HEIGHT) {
+            terminal_scroll();
+        }
     }
 }
 

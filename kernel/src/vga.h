@@ -22,8 +22,6 @@ enum vga_color {
     VGA_COLOR_WHITE
 };
 
-#define ADDR_VIDEO_MEMORY 0xB8000
-
 void terminal_initialize(void);
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
 void terminal_putchar(char c);

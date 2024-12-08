@@ -55,7 +55,7 @@ void putf(double f) {
     
     puti(int_part);
     putc('.');
-    // we lose precision with puti here
+    // we lose precision if we use puti here
     PRINT_7_FRAC_DIGITS(frac);
 }
 

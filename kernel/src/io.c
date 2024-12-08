@@ -1,5 +1,9 @@
+#include "io.h"
+
 #include "vga.h"
 #include "va_list.h"
+
+#include <stdint.h>
 
 void puti(int num) {
     // uses only one branch if 0
@@ -21,9 +25,43 @@ void puti(int num) {
     }
 }
 
-inline void putc(char c) { vga_putchar(c); }
 
-inline void puts(char *s) { vga_write_string(s); }
+#define PRINT_7_FRAC_DIGITS(val)            \
+    do {                                    \
+        putc('0' + ((val) / 1000000) % 10); \
+        putc('0' + ((val) / 100000) % 10);  \
+        putc('0' + ((val) / 10000) % 10);   \
+        putc('0' + ((val) / 1000) % 10);    \
+        putc('0' + ((val) / 100) % 10);     \
+        putc('0' + ((val) / 10) % 10);      \
+        putc('0' + ((val) % 10));           \
+    } while (0)
+
+void putf(double f) {
+    if (f < 0.0) {
+        putc('-');
+        f = -f;
+    }
+
+    // + 0.5 for rounding
+    int int_part = f;
+    const int scale = 10000000;
+    int frac = (f - (int)f) * scale + 0.5;
+    
+    if (frac == scale) {
+        frac = 0;
+        int_part++;
+    }
+    
+    puti(int_part);
+    putc('.');
+    // we lose precision if we use puti here
+    PRINT_7_FRAC_DIGITS(frac);
+}
+
+void putc(char c) { vga_putchar(c); }
+
+void puts(char *s) { vga_write_string(s); }
 
 void krintf(const char *format, ...) {
     va_list args;
@@ -48,9 +86,15 @@ void krintf(const char *format, ...) {
                     puts(value);
                     break;
                 }
-                case 'i' : {
+                case 'd' : {
                     int value = va_arg(args, int);
                     puti(value);
+                    break;
+                }
+                case 'f': {
+                    double value = va_arg(args, double);
+                    putf(value);
+                    break;
                 }
                 // TODO: add float support
             }

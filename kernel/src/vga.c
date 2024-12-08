@@ -70,13 +70,16 @@ void vga_putchar(char c) {
 
             break;
         }
+        case '\r': {
+            terminal_row = 0;
+            break;
+        }
         case 0x20 ... 0x7E: {
             terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
 
             if (++terminal_column == VGA_WIDTH) {
                 vga_putchar('\n');
             }
-
             break;
         }
         default: {

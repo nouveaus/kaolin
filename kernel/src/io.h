@@ -1,6 +1,7 @@
 #pragma once
 
 void puti(int num);
-inline void putc(char c);
-inline void puts(char *s);
+void putc(char c);
+void puts(char *s);
+void putd(double f);
 void krintf(const char *format, ...);

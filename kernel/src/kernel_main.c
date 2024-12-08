@@ -17,7 +17,7 @@ void _Noreturn kernel_main(void) {
         i = (i + 1) % 10;
 
         //vga_write_string(message);
-        krintf("%sThe number is: %d", message, 5);
+        krintf("%sThe number is: %d, float is: %f\n", message, 5, 3.11);
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
 
         // busy sleep loop

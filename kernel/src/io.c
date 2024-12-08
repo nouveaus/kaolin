@@ -3,6 +3,8 @@
 #include "vga.h"
 #include "va_list.h"
 
+#include <stdint.h>
+
 void puti(int num) {
     // uses only one branch if 0
     if (num == 0) {
@@ -21,6 +23,18 @@ void puti(int num) {
         num %= div;
         div /= 10;
     }
+}
+
+#define EXPONENT_BIAS 127
+
+void putf(double f) {
+    if (f < 0) {
+        putc('-');
+        f = -f;
+    }
+    puti(f);
+    putc('.');
+    puti((f - (int)f) * 100000);
 }
 
 void putc(char c) { vga_putchar(c); }
@@ -53,6 +67,12 @@ void krintf(const char *format, ...) {
                 case 'd' : {
                     int value = va_arg(args, int);
                     puti(value);
+                    break;
+                }
+                case 'f': {
+                    double value = va_arg(args, double);
+                    putf(value);
+                    break;
                 }
                 // TODO: add float support
             }

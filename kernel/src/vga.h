@@ -22,10 +22,9 @@ enum vga_color {
     VGA_COLOR_WHITE
 };
 
-void terminal_initialize(void);
-void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
-void terminal_putchar(char c);
-void terminal_setcolor(uint8_t color);
-void terminal_scroll(void);
-void terminal_write(const char *data, size_t size);
-void terminal_writestring(const char *data);
+void vga_initialize(void);
+void vga_set_color(enum vga_color fg, enum vga_color bg);
+void vga_scroll(int lines);
+
+void vga_putchar(char c);
+void vga_write_string(const char *data);

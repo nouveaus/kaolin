@@ -84,7 +84,7 @@ void vga_putchar(char c) {
             vga_putchar('\\');
             vga_putchar('x');
             vga_putchar("0123456789abcdef"[value >> 4]);
-            vga_putchar("0123456789abcdef"[value & 0xff]);
+            vga_putchar("0123456789abcdef"[value & 0xf]);
             break;
         }
     }

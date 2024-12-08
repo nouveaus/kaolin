@@ -2,7 +2,7 @@
 [bits 16]
 
 KERNEL_ENTRY equ 0x2000
-KERNEL_SECTORS equ 1
+KERNEL_SECTORS equ 3
 
 %include "stage0.asm"
 

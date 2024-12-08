@@ -1,4 +1,5 @@
 #include "vga.h"
+#include "io.h"
 
 void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
 
@@ -15,7 +16,8 @@ void _Noreturn kernel_main(void) {
         message[0] = '0' + i;
         i = (i + 1) % 10;
 
-        vga_write_string(message);
+        //vga_write_string(message);
+        krintf("%sThe number is: %d", message, 5);
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
 
         // busy sleep loop

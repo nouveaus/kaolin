@@ -1,3 +1,5 @@
+#include "io.h"
+
 #include "vga.h"
 #include "va_list.h"
 
@@ -21,9 +23,9 @@ void puti(int num) {
     }
 }
 
-inline void putc(char c) { vga_putchar(c); }
+void putc(char c) { vga_putchar(c); }
 
-inline void puts(char *s) { vga_write_string(s); }
+void puts(char *s) { vga_write_string(s); }
 
 void krintf(const char *format, ...) {
     va_list args;
@@ -48,7 +50,7 @@ void krintf(const char *format, ...) {
                     puts(value);
                     break;
                 }
-                case 'i' : {
+                case 'd' : {
                     int value = va_arg(args, int);
                     puti(value);
                 }

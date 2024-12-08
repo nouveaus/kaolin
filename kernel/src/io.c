@@ -25,16 +25,38 @@ void puti(int num) {
     }
 }
 
-#define EXPONENT_BIAS 127
+
+#define PRINT_7_FRAC_DIGITS(val)            \
+    do {                                    \
+        putc('0' + ((val) / 1000000) % 10); \
+        putc('0' + ((val) / 100000) % 10);  \
+        putc('0' + ((val) / 10000) % 10);   \
+        putc('0' + ((val) / 1000) % 10);    \
+        putc('0' + ((val) / 100) % 10);     \
+        putc('0' + ((val) / 10) % 10);      \
+        putc('0' + ((val) % 10));           \
+    } while (0)
 
 void putf(double f) {
-    if (f < 0) {
+    if (f < 0.0) {
         putc('-');
         f = -f;
     }
-    puti(f);
+
+    // + 0.5 for rounding
+    int int_part = f;
+    const int scale = 10000000;
+    int frac = (f - (int)f) * scale + 0.5;
+    
+    if (frac == scale) {
+        frac = 0;
+        int_part++;
+    }
+    
+    puti(int_part);
     putc('.');
-    puti((f - (int)f) * 100000);
+    // we lose precision with puti here
+    PRINT_7_FRAC_DIGITS(frac);
 }
 
 void putc(char c) { vga_putchar(c); }

@@ -21,6 +21,9 @@ void _Noreturn kernel_main(void) {
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
         char c = read_char();
         krintf("char read: %c\n", c);
+        char s[15];
+        read_string(s);
+        krintf("string read: %s\n", s);
 
 
         // busy sleep loop

@@ -121,7 +121,7 @@ static uint8_t inb(uint16_t port) {
 
 static uint8_t ps2_controller_read(void) {
     while (!(inb(STATUS_PORT) & 0x01));
-    return inb(STATUS_PORT);
+    return inb(DATA_PORT);
 }
 
 static void ps2_controller_write(uint8_t value) {
@@ -156,3 +156,13 @@ char read_char(void) {
     return scan_code_to_ascii(ps2_controller_read());
 }
 
+// todo: for some reason it reads in garbage values
+void read_string(char *s) {
+    char c;
+    while ((c = read_char()) != '\n') {
+        *s = c;
+        s++;
+        ps2_controller_clear_output_buffer();
+    }
+    *s = 0;
+}

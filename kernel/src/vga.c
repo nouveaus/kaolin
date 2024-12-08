@@ -35,6 +35,8 @@ void vga_set_color(enum vga_color fg, enum vga_color bg) {
 }
 
 void vga_scroll(int lines) {
+    // move the [HEIGHT - lines, HEIGHT) buffer to [0, HEIGHT - lines), then clear [lines, HEIGHT)
+
     // todo: replace with memmove
     //  memmove(dest, src, (VGA_HEIGHT - lines) * VGA_WIDTH * sizeof(*src));
 

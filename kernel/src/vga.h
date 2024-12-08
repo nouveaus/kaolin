@@ -22,9 +22,17 @@ enum vga_color {
     VGA_COLOR_WHITE
 };
 
+// Initializes the global VGA handler. Must be called once before any other VGA calls
 void vga_initialize(void);
+
+// Changes the color of any text printed next
 void vga_set_color(enum vga_color fg, enum vga_color bg);
+
+// Scrolls down the given number of lines
 void vga_scroll(int lines);
 
+// Prints a single character
 void vga_putchar(char c);
+
+// Prints a null-terminated string
 void vga_write_string(const char *data);

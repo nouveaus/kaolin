@@ -10,7 +10,7 @@ void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
 void _Noreturn kernel_main(void) {
     vga_initialize();
 
-
+    call_cpuid(1);
 
     while (1) {
         // busy sleep loop

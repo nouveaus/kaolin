@@ -1,5 +1,6 @@
 #include "vga.h"
 #include "cpuid.h"
+#include "io.h"
 
 void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
 
@@ -8,6 +9,8 @@ void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
  */
 void _Noreturn kernel_main(void) {
     vga_initialize();
+
+
 
     while (1) {
         // busy sleep loop

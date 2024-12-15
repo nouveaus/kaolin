@@ -1,5 +1,6 @@
 #include "vga.h"
 #include "cpuid.h"
+#include "io.h"
 
 void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
 
@@ -9,6 +10,8 @@ void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
 void _Noreturn kernel_main(void) {
     vga_initialize();
     vga_write_string(cpuid_is_supported() ? "cpuid supported!\n" : "cpuid not supported\n");
+
+    call_cpuid(1);
 
     while (1) {
         // busy sleep loop

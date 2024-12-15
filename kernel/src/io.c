@@ -1,7 +1,6 @@
 #include "io.h"
 
 #include "vga.h"
-#include "serial.h"
 
 #include <stdint.h>
 #include <stdarg.h>
@@ -109,52 +108,4 @@ void krintf(const char *format, ...) {
     }
 
     va_end(args);
-}
-
-static uint8_t ps2_controller_read(void) {
-    while (!(inb(STATUS_PORT) & 0x01));
-    return inb(DATA_PORT);
-}
-
-static void ps2_controller_write(uint8_t value) {
-    while (inb(STATUS_PORT) & 0x02);
-    outb(DATA_PORT, value);
-}
-
-static void ps2_controller_clear_output_buffer(void) {
-    while (inb(STATUS_PORT) & 0x01) {
-        inb(DATA_PORT);
-    }
-}
-
-// for now we support only US qwerty keyboard
-// god bless america
-
-static char scan_code_to_ascii(const uint8_t value) {
-    // static so we dont need to initialise it all the time
-    // Uses US qwerty, table derived from: https://wiki.osdev.org/PS/2_Keyboard
-    static const char lookup_table[] = {
-        0,   27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, '\t',
-        'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0, 'a', 's',
-        'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\', 'z', 'x', 'c', 'v',
-        'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0,
-    };
-
-    if (value < sizeof(lookup_table)) return lookup_table[value];
-    return value;
-}
-
-char read_char(void) {
-    ps2_controller_clear_output_buffer();
-    return scan_code_to_ascii(ps2_controller_read());
-}
-
-// todo: for some reason it reads in garbage values
-void read_string(char *s) {
-    char c;
-    while ((c = read_char()) != '\n') {
-        *s = c;
-        s++;
-    }
-    *s = 0;
 }

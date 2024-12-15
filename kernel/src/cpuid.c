@@ -39,8 +39,7 @@ void print_reg(uint32_t ebx) {
     register_val[4] = 0;
 
     for (int i = 0; i < 4; i++) {
-        krintf("%d:", i);
-        krintf("%c\n", register_val[i]);
+        putc(register_val[i]);
     }
 }
 
@@ -48,20 +47,20 @@ void print_vendor(uint32_t ebx, uint32_t ecx, uint32_t edx) {
     print_reg(ebx);
     print_reg(edx);
     print_reg(ecx);
+    putc('\n');
 }
 
-void call_cpuid(int eax) {
-    uint32_t ebx, ecx, edx;
-    ebx = 0;
-    ecx = 0;
-    edx = 0;
-
+void call_cpuid(const int code, uint32_t *const eax, uint32_t * const ebx, uint32_t *const ecx, uint32_t *const edx) {
     asm (
-        "mov %3, %%eax;"
-        "cpuid;"
-        : "=b" (ebx), "=d" (edx), "=c" (ecx)
-        : "r" (eax)
+        "mov %3, %%eax\n"
+        "cpuid\n"
+        : "=b" (*ebx), "=d" (*edx), "=c" (*ecx), "=a" (*eax)
+        : "r" (code)
     );
+}
 
-    print_vendor(ebx, ecx, edx);
+bool apic_is_supported(void) {
+    uint32_t eax, ebx, ecx, edx;
+    call_cpuid(1, &eax, &ebx, &ecx, &edx);
+    return edx & CPUID_FEAT_EDX_APIC != 0;
 }

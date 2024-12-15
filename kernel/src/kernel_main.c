@@ -8,6 +8,7 @@ void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
  */
 void _Noreturn kernel_main(void) {
     vga_initialize();
+    vga_write_string(cpuid_is_supported() ? "cpuid supported!\n" : "cpuid not supported\n");
 
     while (1) {
         // busy sleep loop

@@ -30,17 +30,16 @@ bool cpuid_is_supported(void) {
     return supported;
 }
 
-void print_reg(uint32_t ebx) {
+void print_reg(uint32_t r) {
     char register_val[5] = {};
 
+    // stores each byte from the register in reverse
     for (int i = 3; i >= 0; i--) {
-        register_val[3 - i] = ((ebx << CHAR_BIT * i) >> (CHAR_BIT * 3));
+        register_val[3 - i] = (r >> (CHAR_BIT * (3 - i))) & 0xFF;
     }
     register_val[4] = 0;
 
-    for (int i = 0; i < 4; i++) {
-        putc(register_val[i]);
-    }
+    puts(register_val);
 }
 
 void print_vendor(uint32_t ebx, uint32_t ecx, uint32_t edx) {

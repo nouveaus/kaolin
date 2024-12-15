@@ -11,7 +11,7 @@ void _Noreturn kernel_main(void) {
     vga_initialize();
     vga_write_string(cpuid_is_supported() ? "cpuid supported!\n" : "cpuid not supported\n");
 
-    call_cpuid(1);
+    call_cpuid(0);
 
     while (1) {
         // busy sleep loop

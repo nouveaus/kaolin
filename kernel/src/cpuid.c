@@ -46,8 +46,8 @@ void print_reg(uint32_t ebx) {
 
 void print_vendor(uint32_t ebx, uint32_t ecx, uint32_t edx) {
     print_reg(ebx);
-    print_reg(ecx);
     print_reg(edx);
+    print_reg(ecx);
 }
 
 void call_cpuid(int eax) {

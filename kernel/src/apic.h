@@ -7,9 +7,12 @@
 
 // Checks whether apic is supported
 bool apic_is_supported(void);
+
+// Enables apic
 void enable_apic(void);
 
-uint32_t cpu_read_to_apic(const void *ioapicaddr, const uint32_t reg);
-void cpu_write_to_apic(const void *ioapicaddr, const uint32_t reg, const uint32_t value);
+// Read apic register
 uint32_t read_reg(const void *ioapicaddr, const uint32_t reg);
+
+// Write to apic register
 void write_reg(const void *ioapicaddr, const uint32_t reg, const uint32_t value);

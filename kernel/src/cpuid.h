@@ -3,8 +3,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define CHAR_BIT 8
-
 // Table taken from CPU Features: https://wiki.osdev.org/CPUID
 enum {
     CPUID_FEAT_ECX_SSE3         = 1 << 0,
@@ -71,10 +69,8 @@ enum {
     CPUID_FEAT_EDX_PBE          = 1 << 31
 };
 
-// Prints the value of the register
-void print_reg(uint32_t r);
 // Prints the vendor string
-void print_vendor(uint32_t ebx, uint32_t ecx, uint32_t edx);
+void print_vendor(const uint32_t ebx, const uint32_t ecx, const uint32_t edx);
 // Calls cpuid according to given code
 void call_cpuid(const int code, uint32_t *const eax, uint32_t * const ebx, uint32_t *const ecx, uint32_t *const edx);
 // Checks whether apic is supported

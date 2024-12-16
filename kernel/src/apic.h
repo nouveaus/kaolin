@@ -5,6 +5,7 @@
 
 #define IOAPICBASE 0xFEC00000
 
+// Checks whether apic is supported
 bool apic_is_supported(void);
 void enable_apic(void);
 

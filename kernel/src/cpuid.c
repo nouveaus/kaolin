@@ -3,34 +3,10 @@
 #include "io.h"
 #include "cpuid.h"
 
-bool cpuid_is_supported(void) {
-    // Source: https://wiki.osdev.org/CPUID
-    // this inverts the id bit in the stored
-    // eflags and compares it
-    bool supported;
-    asm (
-        "pushfl\n"
-        "pushfl\n"
-        "popl %%eax\n"
-        // invert ID bit
-        "xorl $0x00200000, %%eax\n"
-        "pushl %%eax\n"
-        "popfl\n"
-        
-        // verify change here
-        "pushfl\n"
-        "popl %%eax\n"
-        "popfl\n"
-        "andl $0x00200000, %%eax\n"
-        "setnz %0\n"
-        : "=r" (supported)
-        :
-        : "eax", "cc"
-    );
-    return supported;
-}
+#define CHAR_BIT 8
 
-void print_reg(uint32_t r) {
+// Prints the value of the register
+static void print_reg(const uint32_t r) {
     char register_val[5] = {};
 
     // stores each byte from the register in reverse
@@ -42,7 +18,7 @@ void print_reg(uint32_t r) {
     puts(register_val);
 }
 
-void print_vendor(uint32_t ebx, uint32_t ecx, uint32_t edx) {
+void print_vendor(const uint32_t ebx, const uint32_t ecx, const uint32_t edx) {
     print_reg(ebx);
     print_reg(edx);
     print_reg(ecx);

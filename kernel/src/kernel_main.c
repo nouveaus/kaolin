@@ -12,10 +12,6 @@ void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
  */
 void _Noreturn kernel_main(void) {
     vga_initialize();
-    if (!cpuid_is_supported()) {
-        puts("cpuid not supported\n");
-        asm volatile("hlt");
-    }
 
     uint32_t eax, ebx, ecx, edx;
     // get vendor string
@@ -27,13 +23,20 @@ void _Noreturn kernel_main(void) {
         asm volatile("hlt");
     }
 
-    enable_apic();
-    puts("APIC enabled\n");
-
     uint32_t apic_id = (read_reg((void *)IOAPICBASE, 0x00) >> 24) & 0xFF;
     krintf("I/O APIC ID: %d\n", apic_id);
 
+    char message[] = "X Hello world!\n";
+    unsigned int i = 0;
+
     while (1) {
+        message[0] = '0' + i;
+        i = (i + 1) % 10;
+
+        //vga_write_string(message);
+        krintf("%sThe number is: %d, float is: %f\n", message, 5, 3.9999);
+        vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
+
         // busy sleep loop
         for (unsigned s = 0; s != 100000000; s++) {
             asm volatile(""::);

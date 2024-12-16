@@ -9,10 +9,6 @@ void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
  */
 void _Noreturn kernel_main(void) {
     vga_initialize();
-    if (!cpuid_is_supported()) {
-        puts("cpuid not supported\n");
-        asm volatile("hlt");
-    }
 
     uint32_t eax, ebx, ecx, edx;
     // get vendor string

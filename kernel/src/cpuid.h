@@ -3,9 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-bool cpuid_is_supported(void);
 #define CHAR_BIT 8
-
 
 // Table taken from CPU Features: https://wiki.osdev.org/CPUID
 enum {

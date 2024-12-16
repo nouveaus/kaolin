@@ -3,6 +3,8 @@
 #include "apic.h"
 #include "io.h"
 
+#include <stdint.h>
+
 void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
 
 /*
@@ -27,6 +29,9 @@ void _Noreturn kernel_main(void) {
 
     enable_apic();
     puts("APIC enabled\n");
+
+    uint32_t apic_id = (read_reg((void *)IOAPICBASE, 0x00) >> 24) & 0xFF;
+    krintf("I/O APIC ID: %d\n", apic_id);
 
     while (1) {
         // busy sleep loop

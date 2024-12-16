@@ -1,6 +1,6 @@
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel.ld")
 
-add_executable(kernel src/kernel_main.c src/vga.c)
+add_executable(kernel src/kernel_main.c src/vga.c src/io.c)
 
 set_target_properties(kernel PROPERTIES
         LINKER_LANGUAGE C

@@ -2,6 +2,7 @@
 
 #include "cpuid.h"
 #include "msr.h"
+#include "serial.h"
 
 #define IA32_APIC_BASE_MSR 0x1B
 #define IA32_APIC_BASE_MSR_BSP 0x100
@@ -41,9 +42,12 @@ static uintptr_t cpu_get_apic_base(void) {
 // todo: read from acpi to figure out ioapicbase
 // todo: since its not guaranteed to be same in all systems
 
+// todo: add ioapic in front
 uint32_t read_reg(const void *ioapicaddr, const uint32_t reg) {
     uint32_t volatile *const ioapic = (uint32_t volatile *const)ioapicaddr;
     ioapic[0] = reg & 0xFF;
+
+    // window of ioapic
     return ioapic[4];
 }
 
@@ -53,7 +57,16 @@ void write_reg(const void *ioapicaddr, const uint32_t reg, const uint32_t value)
    ioapic[4] = value;
 }
 
+#define PIC1		0x20		/* IO base address for master PIC */
+#define PIC2		0xA0		/* IO base address for slave PIC */
+#define PIC1_DATA	(PIC1+1)
+#define PIC2_DATA	(PIC2+1)
+
 void enable_apic(void) {
+    // disable the PIC (important! according to osdev)
+    outb(PIC1_DATA, 0xFF);
+    outb(PIC2_DATA, 0xFF);
+    
     cpu_set_apic_base(cpu_get_apic_base());
     write_reg((void*)IOAPICBASE, 0xF0, read_reg((void*)IOAPICBASE, 0xF0) | 0x100);
 }

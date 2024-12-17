@@ -14,6 +14,12 @@ bool apic_is_supported(void) {
     return (edx & CPUID_FEAT_EDX_APIC) != 0;
 }
 
+int apic_get_id(void) {
+    uint32_t eax, ebx, ecx, edx;
+    call_cpuid(1, &eax, &ebx, &ecx, &edx);
+    return (ebx >> 24) & 0xFF;
+}
+
 static void cpu_set_apic_base(uintptr_t apic) {
     uint32_t edx = 0;
     // osdev says 0xfffff0000 but thats 36 bits - might be a typo?
@@ -42,19 +48,16 @@ static uintptr_t cpu_get_apic_base(void) {
 // todo: read from acpi to figure out ioapicbase
 // todo: since its not guaranteed to be same in all systems
 
-// todo: add ioapic in front
-uint32_t read_reg(const void *ioapicaddr, const uint32_t reg) {
-    uint32_t volatile *const ioapic = (uint32_t volatile *const)ioapicaddr;
-    ioapic[0] = reg & 0xFF;
+#define BASE_LAPIC 0xFEE00000
 
-    // window of ioapic
-    return ioapic[4];
+void write_reg(void *const lapicbase, const uint32_t reg, const uint32_t value) {
+    uint32_t volatile *const lapic = (uint32_t volatile *const)lapicbase;
+    lapic[reg] = value;
 }
 
-void write_reg(const void *ioapicaddr, const uint32_t reg, const uint32_t value) {
-   uint32_t volatile *const ioapic = (uint32_t volatile *const)ioapicaddr;
-   ioapic[0] = (reg & 0xff);
-   ioapic[4] = value;
+uint32_t read_reg(void *const lapicbase, const uint32_t reg) {
+    uint32_t volatile *const lapic = (uint32_t volatile *const)lapicbase;
+    return lapic[reg];
 }
 
 #define PIC1		0x20		/* IO base address for master PIC */
@@ -62,12 +65,13 @@ void write_reg(const void *ioapicaddr, const uint32_t reg, const uint32_t value)
 #define PIC1_DATA	(PIC1+1)
 #define PIC2_DATA	(PIC2+1)
 
+
 void enable_apic(void) {
     // disable the PIC (important! according to osdev)
     outb(PIC1_DATA, 0xFF);
     outb(PIC2_DATA, 0xFF);
-    
+
     cpu_set_apic_base(cpu_get_apic_base());
-    write_reg((void*)IOAPICBASE, 0xF0, read_reg((void*)IOAPICBASE, 0xF0) | 0x100);
+    write_reg((void*)BASE_LAPIC, 0xF0, read_reg((void*)BASE_LAPIC, 0xF0) | 0x100);
 }
 

@@ -6,6 +6,7 @@
 // Checks whether apic is supported
 bool apic_is_supported(void);
 
+// Gets the local apic id
 int apic_get_id(void);
 
 // Enables apic

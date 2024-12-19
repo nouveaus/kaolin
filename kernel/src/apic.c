@@ -25,10 +25,6 @@ static void cpu_set_apic_base(uintptr_t apic) {
     // osdev says 0xfffff0000 but thats 36 bits - might be a typo?
     uint32_t eax = (apic & 0xFFFFFF000) | IA32_APIC_BASE_MSR_ENABLE;
     
-    #ifdef __PHYSICAL_MEMORY_EXTENSION__
-        edx = (apic >> 32) & 0x0F;
-    #endif
-
     cpu_set_msr(IA32_APIC_BASE_MSR, eax, edx);
 }
 
@@ -36,26 +32,20 @@ static uintptr_t cpu_get_apic_base(void) {
     uint32_t eax, edx;
     cpu_get_msr(IA32_APIC_BASE_MSR, &eax, &edx);
 
-    #ifdef __PHYSICAL_MEMORY_EXTENSION__
-        return (eax & 0xFFFFF000) | ((edx & 0x0F) << 32);
-    #else
-        return (eax & 0xFFFFF000);
-    #endif
+    return (eax & 0xFFFFF000);
 }
-
-// todo: move to own file later on
 
 // todo: read from acpi to figure out ioapicbase
 // todo: since its not guaranteed to be same in all systems
 
 #define BASE_LAPIC 0xFEE00000
 
-void write_reg(void *const lapicbase, const uint32_t reg, const uint32_t value) {
+void write_reg(void *const lapicbase, uint32_t reg, uint32_t value) {
     uint32_t volatile *const lapic = (uint32_t volatile *const)lapicbase;
     lapic[reg] = value;
 }
 
-uint32_t read_reg(void *const lapicbase, const uint32_t reg) {
+uint32_t read_reg(void *const lapicbase, uint32_t reg) {
     uint32_t volatile *const lapic = (uint32_t volatile *const)lapicbase;
     return lapic[reg];
 }

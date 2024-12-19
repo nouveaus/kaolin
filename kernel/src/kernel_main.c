@@ -1,6 +1,10 @@
 #include "vga.h"
 #include "cpuid.h"
+#include "apic.h"
+#include "ioapic.h"
 #include "io.h"
+
+#include <stdint.h>
 
 void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
 
@@ -20,6 +24,17 @@ void _Noreturn kernel_main(void) {
         asm volatile("hlt");
     }
 
+    enable_apic();
+
+    // todo: load idt here
+
+    int apic_id = apic_get_id();
+    krintf("APIC ID: %d\n", apic_id);
+
+    // we have interrupt after 31 since 0-31 are reserved for errors
+    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 0x20, apic_id);
+
+
     char message[] = "X Hello world!\n";
     unsigned int i = 0;
 
@@ -32,7 +47,7 @@ void _Noreturn kernel_main(void) {
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
 
         // busy sleep loop
-        for (unsigned s = 0; s != 100000000; s++) {
+        for (unsigned s = 0; s != 500000000; s++) {
             asm volatile(""::);
         }
     }

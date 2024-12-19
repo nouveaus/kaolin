@@ -73,5 +73,3 @@ enum {
 void print_vendor(const uint32_t ebx, const uint32_t ecx, const uint32_t edx);
 // Calls cpuid according to given code
 void call_cpuid(const int code, uint32_t *const eax, uint32_t * const ebx, uint32_t *const ecx, uint32_t *const edx);
-// Checks whether apic is supported
-bool apic_is_supported(void);

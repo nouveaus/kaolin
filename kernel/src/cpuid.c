@@ -33,9 +33,3 @@ void call_cpuid(const int code, uint32_t *const eax, uint32_t * const ebx, uint3
         : "r" (code)
     );
 }
-
-bool apic_is_supported(void) {
-    uint32_t eax, ebx, ecx, edx;
-    call_cpuid(1, &eax, &ebx, &ecx, &edx);
-    return (edx & CPUID_FEAT_EDX_APIC) != 0;
-}

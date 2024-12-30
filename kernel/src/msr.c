@@ -4,12 +4,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define CPUID_FLAG_MSR 1 << 5;
+#define CPUID_FLAG_MSR 1 << 5
 
 bool cpu_has_msr(void) {
     uint32_t eax, ebx, ecx, edx;
     call_cpuid(1, &eax, &ebx, &ecx, &edx);
-    return edx & CPUID_FLAG_MSR;
+    return (edx & CPUID_FLAG_MSR) != 0;
 }  
 
 void cpu_get_msr(const uint32_t msr, uint32_t *const lo, uint32_t *const hi) {

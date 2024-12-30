@@ -3,6 +3,8 @@
 #include "apic.h"
 #include "ioapic.h"
 #include "io.h"
+#include "acpi.h"
+#include "msr.h"
 
 #include <stdint.h>
 
@@ -23,6 +25,50 @@ void _Noreturn kernel_main(void) {
         puts("APIC not supported\n");
         asm volatile("hlt");
     }
+
+    if (!cpu_has_msr()) {
+        puts("MSR not supported\n");
+        asm volatile("hlt");
+    }
+
+    if (!rsdp_find()) {
+        puts("Could not find RSDP\n");
+        asm volatile("hlt");
+    }
+
+    puts("Found RSDP\nRSDP signature:");
+    rsdp_print_signature();
+    krintf("RSDP revision: %d\n", rsdp_get_revision());
+    if (!rsdp_verify()) {
+        krintf("Could not verify RSDP\n");
+        asm volatile("hlt");
+    }
+    puts("Verified RSDP\n");
+    
+    if (!rsdt_verify()) {
+        puts("Could not verify RSDT\n");
+    }
+    puts("Verified RSRT\n");
+
+    if (!madt_find()) {
+        puts("Could not find MADT\n");
+        asm volatile("hlt");
+    }
+
+    puts("Found MADT\n");
+
+    if (!madt_verify()) {
+        puts("Could not verify MADT\n");
+        asm volatile("hlt");
+    }
+    puts("Verified MADT\n");
+
+    krintf("LAPIC address: %d\n", madt_get_lapic_address());
+
+    size_t count = ioapic_get_entry_count();
+    krintf("Detected %d ioapic on device\n", count);
+
+    krintf("Address is %d\n", get_first_ioapic_address());
 
     enable_apic();
 

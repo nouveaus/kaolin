@@ -107,25 +107,24 @@ uint32_t madt_get_lapic_address(void) {
     return madt->local_interrupt_controller_address;
 }
 
-static size_t madt_get_entry_count(void) {
-    return madt->length - sizeof(struct madt);
-}
-
 static uint32_t ioapic_address = 0;
 
 size_t ioapic_get_entry_count(void) {
-    size_t length = madt_get_entry_count();
     // all entries are after madt
-    struct madt_entry *madt_entry = (struct madt_entry*)(madt + sizeof(struct madt));
+    struct madt_entry *madt_entry = (struct madt_entry*)((uint8_t *)madt + sizeof(struct madt));
+    // madt->length is length of bytes to just add madt with length to get end address
+    uint8_t *end = (uint8_t *)madt + madt->length;
     // they vary in different types tho
     size_t count = 0;
-    for (size_t i = 0; i < length - sizeof(struct madt); i++, madt_entry += madt_entry->length) {
-        if (madt_entry->type != 0) krintf("type: %d, length: %d\n", madt_entry->type, madt_entry->length);
+    while ((uint8_t *)madt_entry < end) {
+        krintf("type: %d, length: %d\n", madt_entry->type, madt_entry->length);
         if (madt_entry->type == 1) {
             // we cast it 
             struct madt_entry_apicio *madt_entry_apicio = (struct madt_entry_apicio*)madt_entry;
             if (!ioapic_address) ioapic_address = madt_entry_apicio->ioapic_address;
+            count++;
         }
+        madt_entry = (struct madt_entry*)((uint8_t*)madt_entry + madt_entry->length);
     }
     return count;
 }

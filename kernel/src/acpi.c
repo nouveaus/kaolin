@@ -3,22 +3,14 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "vga.h"
 #include "io.h"
-
-/*
-// Compares two strings
-// * for now its static, it will be moved to its own library in future
-static int strcmp(char *s1, char *s2) {
-    for (;*s1 == *s2 && *s1 && *s2; *s1++, *s2++);
-    return *s1 - *s2;
-}
-*/
 
 #define BIOS_MEMORY_BEGIN 0x0E0000
 #define BIOS_MEMORY_END 0xFFFFF
 
 #define RSDP_SIGNATURE "RSD PTR "
+
+// TODO: Implement case where acpi version >= 2.0
 
 static bool cmp_signature(char *s1, char *s2) {
     for (int i = 0; s2[i]; i++) {
@@ -39,9 +31,9 @@ bool rsdp_find(void) {
 
 void rsdp_print_signature(void) {
     for (size_t i = 0; i < 8; i++) {
-        vga_putchar(rsdp->signature[i]);
+        putc(rsdp->signature[i]);
     }
-    vga_putchar('\n');
+    putc('\n');
 }
 
 bool rsdp_verify(void) {
@@ -116,8 +108,8 @@ size_t ioapic_get_entry_count(void) {
     uint8_t *end = (uint8_t *)madt + madt->length;
     // they vary in different types tho
     size_t count = 0;
+    // todo: rewrite when heap is implemented
     while ((uint8_t *)madt_entry < end) {
-        krintf("type: %d, length: %d\n", madt_entry->type, madt_entry->length);
         if (madt_entry->type == 1) {
             // we cast it 
             struct madt_entry_apicio *madt_entry_apicio = (struct madt_entry_apicio*)madt_entry;

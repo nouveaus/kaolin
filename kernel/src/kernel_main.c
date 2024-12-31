@@ -63,12 +63,12 @@ void _Noreturn kernel_main(void) {
     }
     puts("Verified MADT\n");
 
-    krintf("LAPIC address: %d\n", madt_get_lapic_address());
+    krintf("LAPIC address: %x\n", madt_get_lapic_address());
 
     size_t count = ioapic_get_entry_count();
     krintf("Detected %d ioapic on device\n", count);
 
-    krintf("Address is %d\n", get_first_ioapic_address());
+    krintf("Address is %x\n", get_first_ioapic_address());
 
     enable_apic();
 

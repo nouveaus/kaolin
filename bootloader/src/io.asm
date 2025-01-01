@@ -21,11 +21,14 @@ print:
 	popa
 	ret
 
+; dl = drive index
+; si = address of disk address packet
 ; automatically loads to drive 0
 disk_load_lba:
 	pusha
 
 	mov	ah, 0x42
+	; mov	dl, dl
 	mov	si, dap
 	int	0x13
 	; carry bit set if err
@@ -41,6 +44,7 @@ disk_load_lba:
 
 .disk_lba_err_msg: db "disk_load_lba error!", 0
 
+; dl = drive index
 lba_check:
 	pusha
 	xor	ax, ax
@@ -48,7 +52,7 @@ lba_check:
 ;	magic number for EDD heck
 	mov	ah, 0x41
 	mov	bx, 0x55AA
-
+	; mov	dl, dl
 	int	0x13
 
 	jc	.lba_check_err

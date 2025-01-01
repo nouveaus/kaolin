@@ -1,4 +1,4 @@
-[bits	16]
+[bits 16]
 
 gdt_beginning:
 .gdt_start:

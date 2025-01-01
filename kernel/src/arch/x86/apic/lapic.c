@@ -10,13 +10,13 @@
 
 bool apic_is_supported(void) {
     uint32_t eax, ebx, ecx, edx;
-    call_cpuid(1, &eax, &ebx, &ecx, &edx);
+    __cpuid(1, eax, ebx, ecx, edx);
     return (edx & CPUID_FEAT_EDX_APIC) != 0;
 }
 
 int apic_get_id(void) {
     uint32_t eax, ebx, ecx, edx;
-    call_cpuid(1, &eax, &ebx, &ecx, &edx);
+    __cpuid(1, eax, ebx, ecx, edx);
     return (ebx >> 24) & 0xFF;
 }
 
@@ -24,7 +24,7 @@ static void cpu_set_apic_base(uintptr_t apic) {
     uint32_t edx = 0;
     // osdev says 0xfffff0000 but thats 36 bits - might be a typo?
     uint32_t eax = (apic & 0xFFFFFF000) | IA32_APIC_BASE_MSR_ENABLE;
-    
+
     cpu_set_msr(IA32_APIC_BASE_MSR, eax, edx);
 }
 

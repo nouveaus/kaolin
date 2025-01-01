@@ -48,7 +48,7 @@ bool rsdp_verify(void) {
     return !sum;
 }
 
-int rsdp_get_revision(void) {
+uint8_t rsdp_get_revision(void) {
     return rsdp->revision;
 }
 

@@ -74,7 +74,7 @@ bool rsdp_find(void);
 bool rsdp_verify(void);
 
 // Gets the revision number of the acpi
-int rsdp_get_revision(void);
+uint8_t rsdp_get_revision(void);
 
 // Prints the signature of the rsdp
 void rsdp_print_signature(void);

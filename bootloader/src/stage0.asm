@@ -9,6 +9,7 @@
 
 	call	lba_check
 
+	; BIOS give us the booting drive index in dl
 	; dap_dest = buffer address (where the data will be copied to)
 	; dap_sectors = how many sectors to read
 	; dap_lba = the first sector you want to read and write

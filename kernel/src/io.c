@@ -12,7 +12,10 @@ void puti(int num) {
         return;
     }
 
-    if (num < 0) vga_putchar('-');
+    if (num < 0) {
+        vga_putchar('-');
+        num = -num;
+    }
     
     // this finds the biggest divisor for the number
     int div = 1;
@@ -23,6 +26,14 @@ void puti(int num) {
         num %= div;
         div /= 10;
     }
+}
+
+void hex(uint32_t num) {
+    puts("0x");
+    for (int i = sizeof(num) * 8 - 4; i >= 0; i -= 4) {
+        putc("0123456789ABCDEF"[(num >> i) & 0xF]);
+    }
+    putc('\n');
 }
 
 
@@ -100,6 +111,15 @@ void krintf(const char *format, ...) {
                     putf(value);
                     break;
                 }
+                case 'x': {
+                    uint32_t value = va_arg(args, uint32_t);
+                    hex(value);
+                    break;
+                }
+                default: 
+                    putc('%');
+                    putc(c);
+                    break;
                 // TODO: add float support
             }
         } else {

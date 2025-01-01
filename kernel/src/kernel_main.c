@@ -21,9 +21,12 @@ bool test = false;
 
 void keyboard_handler(void) {
     asm volatile ("pusha\n");
-    outb(0x20, 0x20);
+    // Consume a key, not doing this will only let 
+    // the interrupt trigger once
+    inb(0x60);
     puts("Keyboard pressed");
     test = true;
+    send_apic_eoi();
     asm volatile ("popa\nleave\niret");
 }
 
@@ -71,7 +74,7 @@ void _Noreturn kernel_main(void) {
     krintf("APIC ID: %d\n", apic_id);
 
     // we have interrupt after 31 since 0-31 are reserved for errors
-    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 0x21, apic_id);
+    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 1, 0x21, apic_id);
 
     for (size_t vector = 0; vector < 32; vector++) {
         setup_interrupt_gate(vector, exception_handler, INTERRUPT_32_GATE, 0);

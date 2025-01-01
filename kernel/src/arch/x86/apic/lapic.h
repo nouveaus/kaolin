@@ -18,3 +18,5 @@ uint32_t read_reg(void *const ioapicaddr, uint32_t reg);
 // Write to apic register
 void write_reg(void *const ioapicaddr, uint32_t reg, uint32_t value);
 
+// Signal end of interrupt to apic
+void send_apic_eoi(void);

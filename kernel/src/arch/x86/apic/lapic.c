@@ -65,3 +65,6 @@ void enable_apic(void) {
     write_reg((void*)BASE_LAPIC, 0xF0, read_reg((void*)BASE_LAPIC, 0xF0) | 0x100);
 }
 
+void send_apic_eoi(void) {
+    *(uint32_t volatile *)(BASE_LAPIC + 0xB0) = 0;
+}

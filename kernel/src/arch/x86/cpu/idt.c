@@ -1,5 +1,7 @@
 #include "idt.h"
 
+// aligned for performance
+__attribute__((aligned(0x10)))
 struct interrupt_descriptor interrupt_descriptors[256] = { 0 };
 
 struct idt_descriptor idt_descriptor = {
@@ -24,7 +26,7 @@ void setup_interrupt_gate(uint32_t irq, void *base, enum gate_type type, uint8_t
     interrupt_descriptor->type_attributes |= (privilege_level & 0x3) << 5;
 
     interrupt_descriptor->type_attributes |= type;
-        
+
     interrupt_descriptor->selector = idt_segment_descriptor(1);
 
     // address of the routine

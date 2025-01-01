@@ -70,20 +70,29 @@ struct madt_entry_apicio {
 // Finds the rsdp and sets the address
 bool rsdp_find(void);
 
+// Verifies the rsdp
 bool rsdp_verify(void);
 
+// Gets the revision number of the acpi
 int rsdp_get_revision(void);
 
+// Prints the signature of the rsdp
 void rsdp_print_signature(void);
 
+// Verifies the rsdt
 bool rsdt_verify(void);
 
+// Finds the madt and sets the address
 bool madt_find(void);
 
+// Verifies the madt
 bool madt_verify(void);
 
+// Gets the local apic address
 uint32_t madt_get_lapic_address(void);
 
+// Gets the count of ioapic and gets the address of the first ioapic
 size_t ioapic_get_entry_count(void);
 
+// Returns the first ioapic address
 uint32_t get_first_ioapic_address(void);

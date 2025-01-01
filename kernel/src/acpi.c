@@ -11,6 +11,7 @@
 #define RSDP_SIGNATURE "RSD PTR "
 
 // TODO: Implement case where acpi version >= 2.0
+// TODO: needs xsdt
 
 static bool cmp_signature(char *s1, char *s2) {
     for (int i = 0; s2[i]; i++) {

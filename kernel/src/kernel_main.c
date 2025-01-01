@@ -22,7 +22,7 @@ void _Noreturn kernel_main(void) {
 
     uint32_t eax, ebx, ecx, edx;
     // get vendor string
-    call_cpuid(0, &eax, &ebx, &ecx, &edx);
+    __cpuid(0, eax, ebx, ecx, edx);
     print_vendor(ebx, ecx, edx);
 
     if (!apic_is_supported()) {
@@ -80,7 +80,7 @@ static inline void read_acpi(void) {
         _die();
     }
     puts("Verified RSDP\n");
-    
+
     if (!rsdt_verify()) {
         puts("Could not verify RSDT\n");
     }

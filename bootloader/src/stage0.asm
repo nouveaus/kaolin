@@ -4,19 +4,24 @@
 	mov	bp,	0x7c00
 	mov	sp,	bp
 
-
 	mov	bx,	success_stack_msg
 	call	print
 
-	mov	bx,	0x7e00
-	mov	dh,	1
-	mov	cl,	0x02
-	call	disk_load
+	call	lba_check
 
-	mov	bx,	KERNEL_ENTRY
-	mov	dh,	KERNEL_SECTORS
-	mov	cl,	0x03
-	call	disk_load
+	; BIOS give us the booting drive index in dl
+	; dap_dest = buffer address (where the data will be copied to)
+	; dap_sectors = how many sectors to read
+	; dap_lba = the first sector you want to read and write
+	mov	dword	[dap_dest], 0x7e00
+	mov	word	[dap_sectors], 1
+	mov	dword	[dap_lba], 0x1
+	call	disk_load_lba
+
+	mov	dword	[dap_dest], KERNEL_ENTRY
+	mov	word	[dap_sectors], KERNEL_SECTORS
+	mov	dword	[dap_lba], 0x2
+	call	disk_load_lba
 
 	call	enable_a20
 

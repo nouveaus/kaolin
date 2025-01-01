@@ -68,3 +68,13 @@ void enable_apic(void) {
 void send_apic_eoi(void) {
     *(uint32_t volatile *)(BASE_LAPIC + 0xB0) = 0;
 }
+
+// Refer to Intel IA-32 Volume 3 12.5.4 APIC Timer
+void init_apic_timer(uint32_t initial_count, uint8_t vector) {
+    // be divisble by 16
+    *(uint32_t volatile *)(BASE_LAPIC + 0x3E0) = 1010;
+    // set initial count
+    *(uint32_t volatile *)(BASE_LAPIC + 0x380) = initial_count;
+    // Refer to 12.5.1 (Timer mode and vector in Figure 12-8)
+    *(uint32_t volatile *)(BASE_LAPIC + 0x320) = vector | (1 << 17);
+}

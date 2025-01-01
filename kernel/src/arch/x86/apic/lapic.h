@@ -20,3 +20,6 @@ void write_reg(void *const ioapicaddr, uint32_t reg, uint32_t value);
 
 // Signal end of interrupt to apic
 void send_apic_eoi(void);
+
+// Initialises the apic timer
+void init_apic_timer(uint32_t initial_count, uint8_t vector);

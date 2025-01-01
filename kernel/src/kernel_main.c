@@ -19,6 +19,8 @@ void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt" ::); }
 
 bool test = false;
 
+int timer_ticks = 0;
+
 void keyboard_handler(void) {
     asm volatile ("pusha\n");
     // Consume a key, not doing this will only let 
@@ -26,6 +28,13 @@ void keyboard_handler(void) {
     inb(0x60);
     puts("Keyboard pressed");
     test = true;
+    send_apic_eoi();
+    asm volatile ("popa\nleave\niret");
+}
+
+void timer_handler(void) {
+    asm volatile ("pusha\n");
+    timer_ticks++;
     send_apic_eoi();
     asm volatile ("popa\nleave\niret");
 }
@@ -41,7 +50,6 @@ void trap(void) {
     puts("Trap\n");
     asm volatile ("popa\nleave\niret");
 }
-
 
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected mode.
@@ -73,13 +81,19 @@ void _Noreturn kernel_main(void) {
     int apic_id = apic_get_id();
     krintf("APIC ID: %d\n", apic_id);
 
-    // we have interrupt after 31 since 0-31 are reserved for errors
+    init_apic_timer(1000000, 0x20);
+
+    // system timer
+    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 0, 0x20, apic_id);
+    // keyboard
     ioapic_set_redirect((uintptr_t*)IOAPICBASE, 1, 0x21, apic_id);
 
     for (size_t vector = 0; vector < 32; vector++) {
         setup_interrupt_gate(vector, exception_handler, INTERRUPT_32_GATE, 0);
     }
 
+    // we have interrupt after 31 since 0-31 are reserved for errors
+    setup_interrupt_gate(0x20, timer_handler, INTERRUPT_32_GATE, 0);
     setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_32_GATE, 0);
     setup_interrupt_gate(0x80, trap, TRAP_32_GATE, 0);
 
@@ -93,7 +107,7 @@ void _Noreturn kernel_main(void) {
         i = (i + 1) % 10;
 
         //vga_write_string(message);
-        krintf("%sThe number is: %d, float is: %f, test: %d\n", message, 5, 3.9999, test);
+        krintf("%sThe number is: %d, float is: %f, test: %d, ticks: %d\n", message, 5, 3.9999, test, timer_ticks);
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
         asm volatile ("int %0" : : "i"(0x80) : "memory");
 

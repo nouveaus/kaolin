@@ -1,10 +1,13 @@
 #include "arch/x86/vga/vga.h"
 #include "arch/x86/cpu/cpuid.h"
 #include "arch/x86/cpu/msr.h"
+#include "arch/x86/cpu/idt.h"
 #include "arch/x86/apic/lapic.h"
 #include "arch/x86/apic/ioapic.h"
 #include "arch/x86/io/io.h"
 #include "arch/x86/acpi/acpi.h"
+
+#include "arch/x86/serial/serial.h"
 
 #include <stdint.h>
 
@@ -13,6 +16,23 @@ void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
 static inline void read_acpi(void);
 
 void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt" ::); }
+
+bool test = false;
+
+void keyboard_handler(void) {
+    asm volatile ("pusha\n");
+    outb(0x20, 0x20);
+    puts("Keyboard pressed");
+    test = true;
+    asm volatile ("popa\nleave\niret");
+}
+
+void exception_handler(void) {
+    asm volatile ("pusha\n");
+    puts("You dun goofed up");
+    _die();
+}
+
 
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected mode.
@@ -45,8 +65,15 @@ void _Noreturn kernel_main(void) {
     krintf("APIC ID: %d\n", apic_id);
 
     // we have interrupt after 31 since 0-31 are reserved for errors
-    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 0x20, apic_id);
+    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 0x21, apic_id);
 
+    for (size_t vector = 0; vector < 32; vector++) {
+        setup_interrupt_gate(vector, exception_handler, INTERRUPT_32_GATE, 0);
+    }
+
+    setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_32_GATE, 0);
+
+    load_idt();
 
     char message[] = "X Hello world!\n";
     unsigned int i = 0;
@@ -56,7 +83,7 @@ void _Noreturn kernel_main(void) {
         i = (i + 1) % 10;
 
         //vga_write_string(message);
-        krintf("%sThe number is: %d, float is: %f\n", message, 5, 3.9999);
+        krintf("%sThe number is: %d, float is: %f, test: %d\n", message, 5, 3.9999, test);
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
 
         // busy sleep loop

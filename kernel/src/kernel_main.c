@@ -12,7 +12,7 @@ void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
 
 static inline void read_acpi(void);
 
-void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt"); }
+void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt" ::); }
 
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected mode.

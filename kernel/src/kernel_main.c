@@ -29,8 +29,14 @@ void keyboard_handler(void) {
 
 void exception_handler(void) {
     asm volatile ("pusha\n");
-    puts("You dun goofed up");
+    puts("Fatal Error Occurred!");
     _die();
+}
+
+void trap(void) {
+    asm volatile ("pusha\n");
+    puts("Trap\n");
+    asm volatile ("popa\nleave\niret");
 }
 
 
@@ -72,6 +78,7 @@ void _Noreturn kernel_main(void) {
     }
 
     setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_32_GATE, 0);
+    setup_interrupt_gate(0x80, trap, TRAP_32_GATE, 0);
 
     load_idt();
 
@@ -85,6 +92,7 @@ void _Noreturn kernel_main(void) {
         //vga_write_string(message);
         krintf("%sThe number is: %d, float is: %f, test: %d\n", message, 5, 3.9999, test);
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
+        asm volatile ("int %0" : : "i"(0x80) : "memory");
 
         // busy sleep loop
         for (unsigned s = 0; s != 500000000; s++) {

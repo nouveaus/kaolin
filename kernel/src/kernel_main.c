@@ -12,6 +12,8 @@ void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
 
 static inline void read_acpi(void);
 
+void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt"); }
+
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected mode.
  */
@@ -25,12 +27,12 @@ void _Noreturn kernel_main(void) {
 
     if (!apic_is_supported()) {
         puts("APIC not supported\n");
-        asm volatile("hlt");
+        _die();
     }
 
     if (!cpu_has_msr()) {
         puts("MSR not supported\n");
-        asm volatile("hlt");
+        _die();
     }
 
     read_acpi();
@@ -67,7 +69,7 @@ void _Noreturn kernel_main(void) {
 static inline void read_acpi(void) {
     if (!rsdp_find()) {
         puts("Could not find RSDP\n");
-        asm volatile("hlt");
+        _die();
     }
 
     puts("Found RSDP\nRSDP signature:");
@@ -75,7 +77,7 @@ static inline void read_acpi(void) {
     krintf("RSDP revision: %d\n", rsdp_get_revision());
     if (!rsdp_verify()) {
         krintf("Could not verify RSDP\n");
-        asm volatile("hlt");
+        _die();
     }
     puts("Verified RSDP\n");
     
@@ -86,14 +88,14 @@ static inline void read_acpi(void) {
 
     if (!madt_find()) {
         puts("Could not find MADT\n");
-        asm volatile("hlt");
+        _die();
     }
 
     puts("Found MADT\n");
 
     if (!madt_verify()) {
         puts("Could not verify MADT\n");
-        asm volatile("hlt");
+        _die();
     }
     puts("Verified MADT\n");
 

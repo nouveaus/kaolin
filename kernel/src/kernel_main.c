@@ -39,6 +39,11 @@ void timer_handler(void) {
     asm volatile ("popa\nleave\niret");
 }
 
+void ksleep(int ticks) {
+    init_apic_timer(ticks, 0x20);
+    while (get_apic_timer_current());
+}
+
 void exception_handler(void) {
     asm volatile ("pusha\n");
     puts("Fatal Error Occurred!");
@@ -81,8 +86,6 @@ void _Noreturn kernel_main(void) {
     int apic_id = apic_get_id();
     krintf("APIC ID: %d\n", apic_id);
 
-    init_apic_timer(1000000, 0x20);
-
     // system timer
     ioapic_set_redirect((uintptr_t*)IOAPICBASE, 0, 0x20, apic_id);
     // keyboard
@@ -111,10 +114,7 @@ void _Noreturn kernel_main(void) {
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
         asm volatile ("int %0" : : "i"(0x80) : "memory");
 
-        // busy sleep loop
-        for (unsigned s = 0; s != 500000000; s++) {
-            asm volatile(""::);
-        }
+        ksleep(276447232);
     }
 }
 

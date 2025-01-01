@@ -1,5 +1,7 @@
 .idea/
 .vscode/
 
+tags
+
 cmake-*/
 build*/

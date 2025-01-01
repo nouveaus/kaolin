@@ -54,7 +54,7 @@ lba_check:
 	int	0x13
 
 	jc	.lba_check_err
-	
+
 	cmp	bx, 0xAA55
 	jne	.lba_check_err
 
@@ -67,3 +67,20 @@ lba_check:
 	hlt
 
 .lba_check_err_msg: db "lba not supported", 0
+
+; Disk address packet
+dap:
+	; size of DAP
+	db	0x10
+	; unused, 0
+	db	0
+dap_sectors:
+	; sectors to read. some BIOSes are limited to a single signed byte (127)
+	dw	0
+dap_dest:
+	; destination address
+	dd	0
+dap_lba:
+	; little-endian start of LBA address to read. 0-indexed
+	dd	0
+	dd	0

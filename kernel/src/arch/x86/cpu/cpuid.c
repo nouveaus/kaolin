@@ -1,7 +1,8 @@
+#include "cpuid.h"
+
 #include <stdint.h>
 
-#include "io.h"
-#include "cpuid.h"
+#include "../io/io.h"
 
 #define CHAR_BIT 8
 

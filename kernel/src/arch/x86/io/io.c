@@ -1,9 +1,9 @@
 #include "io.h"
 
-#include "vga.h"
-
 #include <stdint.h>
 #include <stdarg.h>
+
+#include "../vga/vga.h"
 
 void puti(int num) {
     // uses only one branch if 0

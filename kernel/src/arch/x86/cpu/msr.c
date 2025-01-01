@@ -1,8 +1,9 @@
 #include "msr.h"
 
-#include "cpuid.h"
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "cpuid.h"
 
 #define CPUID_FLAG_MSR 1 << 5
 

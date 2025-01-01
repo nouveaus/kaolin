@@ -1,10 +1,10 @@
-#include "vga.h"
-#include "cpuid.h"
-#include "apic.h"
-#include "ioapic.h"
-#include "io.h"
-#include "acpi.h"
-#include "msr.h"
+#include "arch/x86/vga/vga.h"
+#include "arch/x86/cpu/cpuid.h"
+#include "arch/x86/cpu/msr.h"
+#include "arch/x86/apic/lapic.h"
+#include "arch/x86/apic/ioapic.h"
+#include "arch/x86/io/io.h"
+#include "arch/x86/acpi/acpi.h"
 
 #include <stdint.h>
 

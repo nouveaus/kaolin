@@ -1,6 +1,16 @@
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel.ld")
 
-add_executable(kernel src/kernel_main.c src/vga.c src/cpuid.c src/io.c src/apic.c src/msr.c src/serial.c src/ioapic.c src/acpi.c)
+add_executable(kernel 
+        src/arch/x86/acpi/acpi.c
+        src/arch/x86/apic/ioapic.c
+        src/arch/x86/apic/lapic.c
+        src/arch/x86/cpu/cpuid.c
+        src/arch/x86/cpu/msr.c
+        src/arch/x86/io/io.c
+        src/arch/x86/serial/serial.c
+        src/arch/x86/vga/vga.c
+        src/kernel_main.c
+)
 
 set_target_properties(kernel PROPERTIES
         LINKER_LANGUAGE C

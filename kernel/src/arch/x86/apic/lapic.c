@@ -1,8 +1,8 @@
-#include "apic.h"
+#include "lapic.h"
 
-#include "cpuid.h"
-#include "msr.h"
-#include "serial.h"
+#include "../cpu/cpuid.h"
+#include "../cpu/msr.h"
+#include "../serial/serial.h"
 
 #define IA32_APIC_BASE_MSR 0x1B
 #define IA32_APIC_BASE_MSR_BSP 0x100

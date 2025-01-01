@@ -21,30 +21,6 @@ print:
 	popa
 	ret
 
-; dh = amount of sectors to read
-; bx = offset within the segment (es reg)
-disk_load:
-	pusha
-
-	mov	ah,	0x02
-	mov	al,	dh
-	mov	ch,	0x00
-	mov	dh,	0x00
-
-	int	0x13
-
-	jc	.disk_err
-
-	popa
-	ret
-
-.disk_err:
-	mov	bx,	.disk_err_msg
-	call	print
-	hlt
-
-.disk_err_msg: db "disk_load error!", 0
-
 ; si = address of disk address packet
 ; automatically loads to drive 0
 disk_load_lba:
@@ -52,6 +28,7 @@ disk_load_lba:
 
 	mov	ah, 0x42
 	mov	dl, 0x80
+	mov	si, dap
 	int	0x13
 	; carry bit set if err
 	jc	.disk_lba_err
@@ -69,10 +46,10 @@ disk_load_lba:
 lba_check:
 	pusha
 	xor	ax, ax
-	mov	es, ax
+
 ;	magic number for EDD heck
-	mov	bx, 0x55AA
 	mov	ah, 0x41
+	mov	bx, 0x55AA
 	mov	dl, 0x80
 	int	0x13
 

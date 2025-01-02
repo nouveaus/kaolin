@@ -6,54 +6,26 @@
 #include "arch/x86/apic/ioapic.h"
 #include "arch/x86/io/io.h"
 #include "arch/x86/acpi/acpi.h"
-
 #include "arch/x86/serial/serial.h"
+
+#include "arch/x86/klib/klib.h"
+#include "arch/x86/drivers/keyboard/keyboard.h"
+#include "arch/x86/drivers/timer/timer.h"
 
 #include <stdint.h>
 
 void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
 
 static inline void read_acpi(void);
+static inline void setup_idt(void);
 
 void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt" ::); }
 
-bool test = false;
-
-int timer_ticks = 0;
-
-void keyboard_handler(void) {
-    asm volatile ("pusha\n");
-    // Consume a key, not doing this will only let 
-    // the interrupt trigger once
-    inb(0x60);
-    puts("Keyboard pressed");
-    test = true;
-    send_apic_eoi();
-    asm volatile ("popa\nleave\niret");
-}
-
-void timer_handler(void) {
-    asm volatile ("pusha\n");
-    timer_ticks++;
-    send_apic_eoi();
-    asm volatile ("popa\nleave\niret");
-}
-
-void ksleep(int ticks) {
-    init_apic_timer(ticks, 0x20);
-    while (get_apic_timer_current());
-}
 
 void exception_handler(void) {
     asm volatile ("pusha\n");
     puts("Fatal Error Occurred!");
     _die();
-}
-
-void trap(void) {
-    asm volatile ("pusha\n");
-    puts("Trap\n");
-    asm volatile ("popa\nleave\niret");
 }
 
 /*
@@ -81,26 +53,7 @@ void _Noreturn kernel_main(void) {
 
     enable_apic();
 
-    // todo: load idt here
-
-    int apic_id = apic_get_id();
-    krintf("APIC ID: %d\n", apic_id);
-
-    // system timer
-    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 0, 0x20, apic_id);
-    // keyboard
-    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 1, 0x21, apic_id);
-
-    for (size_t vector = 0; vector < 32; vector++) {
-        setup_interrupt_gate(vector, exception_handler, INTERRUPT_32_GATE, 0);
-    }
-
-    // we have interrupt after 31 since 0-31 are reserved for errors
-    setup_interrupt_gate(0x20, timer_handler, INTERRUPT_32_GATE, 0);
-    setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_32_GATE, 0);
-    setup_interrupt_gate(0x80, trap, TRAP_32_GATE, 0);
-
-    load_idt();
+    setup_idt();
 
     char message[] = "X Hello world!\n";
     unsigned int i = 0;
@@ -110,7 +63,7 @@ void _Noreturn kernel_main(void) {
         i = (i + 1) % 10;
 
         //vga_write_string(message);
-        krintf("%sThe number is: %d, float is: %f, test: %d, ticks: %d\n", message, 5, 3.9999, test, timer_ticks);
+        krintf("%sThe number is: %d, float is: %f, ticks: %d\n", message, 5, 3.9999, get_timer_ticks());
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
         asm volatile ("int %0" : : "i"(0x80) : "memory");
 
@@ -157,4 +110,25 @@ static inline void read_acpi(void) {
     krintf("Detected %d ioapic on device\n", count);
 
     krintf("Address is %x\n", get_first_ioapic_address());
+}
+
+static inline void setup_idt(void) {
+    int apic_id = apic_get_id();
+    krintf("APIC ID: %d\n", apic_id);
+
+    // system timer
+    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 0, 0x20, apic_id);
+    // keyboard
+    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 1, 0x21, apic_id);
+
+    for (size_t vector = 0; vector < 32; vector++) {
+        setup_interrupt_gate(vector, exception_handler, INTERRUPT_32_GATE, 0);
+    }
+
+    // we have interrupt after 31 since 0-31 are reserved for errors
+    setup_interrupt_gate(0x20, timer_handler, INTERRUPT_32_GATE, 0);
+    setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_32_GATE, 0);
+    setup_interrupt_gate(0x80, trap, TRAP_32_GATE, 0);
+
+    load_idt();
 }

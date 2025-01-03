@@ -5,10 +5,12 @@
 #include "arch/x86/apic/ioapic.h"
 #include "arch/x86/io/io.h"
 #include "arch/x86/acpi/acpi.h"
+#include "arch/x86/memory/memmap.h"
 
 #include <stdint.h>
 
-void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
+
+void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor address_range_descriptor[]) __attribute__((section(".text.kernel_main")));
 
 static inline void read_acpi(void);
 
@@ -17,7 +19,7 @@ void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt" ::); }
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected mode.
  */
-void _Noreturn kernel_main(void) {
+void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor address_range_descriptor[]) {
     vga_initialize();
 
     uint32_t eax, ebx, ecx, edx;
@@ -55,14 +57,16 @@ void _Noreturn kernel_main(void) {
         message[0] = '0' + i;
         i = (i + 1) % 10;
 
-        //vga_write_string(message);
-        krintf("%sThe number is: %d, float is: %f\n", message, 5, 3.9999);
+        krintf("%sThe number is: %d, float is: %f, entry count: %d\n", message, 5, 3.9999, entry_count);
+
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
 
         // busy sleep loop
         for (unsigned s = 0; s != 500000000; s++) {
             asm volatile(""::);
         }
+
+        memmap_print_entries(entry_count, address_range_descriptor);
     }
 }
 

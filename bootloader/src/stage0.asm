@@ -24,6 +24,7 @@
 	call	disk_load_lba
 
 	call	enable_a20
+	call	detect_memory
 
 	mov	bx,	success_a20_msg
 	call	print
@@ -40,6 +41,7 @@ success_a20_msg: db "a20 successful", 30, 10, 0
 ; Imports for sector 1
 
 %include "io.asm"
+%include "memdetect.asm"
 
 times 510-($-$$) db 0
 dw 0xAA55

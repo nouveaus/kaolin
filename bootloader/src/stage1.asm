@@ -38,6 +38,7 @@ init_pm:
 ; protected mode is on from here onwards
 
 	mov	ebx,	.success_init_pm_msg
+	call	detect_memory
 	call	print_vga
 	call	cpuid_avaliability
 
@@ -54,5 +55,6 @@ init_pm:
 
 %include "io32.asm"
 %include "cpuid.asm"
+%include "memdetect.asm"
 
 times 512-($-second_segement_start) db 0

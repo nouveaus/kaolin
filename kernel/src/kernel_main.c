@@ -5,17 +5,9 @@
 #include "arch/x86/apic/ioapic.h"
 #include "arch/x86/io/io.h"
 #include "arch/x86/acpi/acpi.h"
+#include "arch/x86/memory/memmap.h"
 
 #include <stdint.h>
-
-struct address_range_descriptor {
-    uint32_t base_address_lower;
-    uint32_t base_address_higher;
-    uint32_t length_lower;
-    uint32_t length_higher;
-    uint32_t type;
-    uint32_t extended_attributes;
-};
 
 
 void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor address_range_descriptor[]) __attribute__((section(".text.kernel_main")));
@@ -65,30 +57,16 @@ void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor
         message[0] = '0' + i;
         i = (i + 1) % 10;
 
-        //vga_write_string(message);
         krintf("%sThe number is: %d, float is: %f, entry count: %d\n", message, 5, 3.9999, entry_count);
-        for (size_t i = 0; i < entry_count; i++) {
-            krintf(
-                "entry count %d\n"
-                "base address lower: %x,"
-                "base address higher: %x\n"
-                "length lower: %x,"
-                "length higher: %x\n"
-                "type: %d, extended attributes: %x\n"
-                , i, address_range_descriptor[i].base_address_lower,
-                address_range_descriptor[i].base_address_higher,
-                address_range_descriptor[i].length_lower,
-                address_range_descriptor[i].length_higher,
-                address_range_descriptor[i].type,
-                address_range_descriptor[i].extended_attributes
-            );
-        }
+
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
 
         // busy sleep loop
         for (unsigned s = 0; s != 500000000; s++) {
             asm volatile(""::);
         }
+
+        memmap_print_entries(entry_count, address_range_descriptor);
     }
 }
 

@@ -41,7 +41,7 @@ init_pm:
 	call	print_vga
 	call	cpuid_avaliability
 
-;	
+;	struct memory_range_descriptor memory_range_descriptor[]
 	lea	eax, [mmap_buf+4]
 	push	eax
 	

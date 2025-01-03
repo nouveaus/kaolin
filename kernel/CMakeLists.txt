@@ -7,6 +7,7 @@ add_executable(kernel
         src/arch/x86/cpu/cpuid.c
         src/arch/x86/cpu/msr.c
         src/arch/x86/io/io.c
+        src/arch/x86/memory/memmap.c
         src/arch/x86/serial/serial.c
         src/arch/x86/vga/vga.c
         src/kernel_main.c

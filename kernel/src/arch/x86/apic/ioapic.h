@@ -11,5 +11,4 @@ uint32_t ioapic_read_reg(void *ioapicaddr, const uint32_t reg);
 void ioapic_write_reg(void *ioapicaddr, const uint32_t reg, const uint32_t value);
 
 // Redirect a hardware interrupt to a local apic
-void ioapic_set_redirect(void *ioapicaddr, const uint8_t vector,
-                         const uint8_t apic_id);
+void ioapic_set_redirect(void *ioapicaddr, const uint8_t irq, const uint8_t vector, const uint8_t apic_id);

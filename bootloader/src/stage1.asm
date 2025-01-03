@@ -32,16 +32,22 @@ init_pm:
 	mov	gs,	ax
 
 ; New stack
-	mov	ebp,	0x90000
+	mov	ebp,	0x70000
 	mov	esp,	ebp
 
 ; protected mode is on from here onwards
 
 	mov	ebx,	.success_init_pm_msg
-	call	detect_memory
 	call	print_vga
 	call	cpuid_avaliability
 
+;	
+	lea	eax, [mmap_buf+4]
+	push	eax
+	
+;	uint32_t entry_count
+	mov	eax, [mmap_buf]
+	push	eax
 	; finally enter the kernel in 32-bit protected mode
 	call	KERNEL_ENTRY
 
@@ -55,6 +61,5 @@ init_pm:
 
 %include "io32.asm"
 %include "cpuid.asm"
-%include "memdetect.asm"
 
 times 512-($-second_segement_start) db 0

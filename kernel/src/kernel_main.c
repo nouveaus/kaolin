@@ -8,7 +8,17 @@
 
 #include <stdint.h>
 
-void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
+struct address_range_descriptor {
+    uint32_t base_address_lower;
+    uint32_t base_address_higher;
+    uint32_t length_lower;
+    uint32_t length_higher;
+    uint32_t type;
+    uint32_t extended_attributes;
+};
+
+
+void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor address_range_descriptor[]) __attribute__((section(".text.kernel_main")));
 
 static inline void read_acpi(void);
 
@@ -17,7 +27,7 @@ void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt" ::); }
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected mode.
  */
-void _Noreturn kernel_main(void) {
+void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor address_range_descriptor[]) {
     vga_initialize();
 
     uint32_t eax, ebx, ecx, edx;
@@ -56,7 +66,23 @@ void _Noreturn kernel_main(void) {
         i = (i + 1) % 10;
 
         //vga_write_string(message);
-        krintf("%sThe number is: %d, float is: %f\n", message, 5, 3.9999);
+        krintf("%sThe number is: %d, float is: %f, entry count: %d\n", message, 5, 3.9999, entry_count);
+        for (size_t i = 0; i < entry_count; i++) {
+            krintf(
+                "entry count %d\n"
+                "base address lower: %x,"
+                "base address higher: %x\n"
+                "length lower: %x,"
+                "length higher: %x\n"
+                "type: %d, extended attributes: %x\n"
+                , i, address_range_descriptor[i].base_address_lower,
+                address_range_descriptor[i].base_address_higher,
+                address_range_descriptor[i].length_lower,
+                address_range_descriptor[i].length_higher,
+                address_range_descriptor[i].type,
+                address_range_descriptor[i].extended_attributes
+            );
+        }
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
 
         // busy sleep loop

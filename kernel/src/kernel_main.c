@@ -21,7 +21,6 @@ static inline void setup_idt(void);
 
 void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt" ::); }
 
-
 void exception_handler(void) {
     asm volatile ("pusha\n");
     puts("Fatal Error Occurred!");

@@ -5,8 +5,10 @@ add_executable(kernel
         src/arch/x86/apic/ioapic.c
         src/arch/x86/apic/lapic.c
         src/arch/x86/cpu/cpuid.c
+        src/arch/x86/cpu/long_mode.c
         src/arch/x86/cpu/msr.c
         src/arch/x86/cpu/idt.c
+        src/arch/x86/cpu/gdt.c
         src/arch/x86/drivers/keyboard/keyboard.c
         src/arch/x86/drivers/timer/timer.c
         src/arch/x86/io/io.c

@@ -14,7 +14,6 @@
 
 #include <stdint.h>
 
-
 void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor address_range_descriptor[]) __attribute__((section(".text.kernel_main")));
 
 static inline void read_acpi(void);

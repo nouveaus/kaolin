@@ -65,6 +65,7 @@ void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor
         //vga_write_string(message);
         krintf("%sThe number is: %d, float is: %f, ticks: %d, entry count: %d\n", message, 5, 3.9999, get_timer_ticks(), entry_count);
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
+        memmap_print_entries(entry_count, address_range_descriptor);
         asm volatile ("int %0" : : "i"(0x80) : "memory");
 
         ksleep(276447232);

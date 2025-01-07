@@ -1,6 +1,7 @@
 #include "memmap.h"
 
 #include "../io/io.h"
+#include "../klib/klib.h"
 
 #include <stddef.h>
 
@@ -19,5 +20,6 @@ void memmap_print_entries(
             address_range_descriptor[i].length_higher,
             address_range_descriptor[i].type,
             address_range_descriptor[i].extended_attributes);
+            ksleep(276447232);
     }
 }

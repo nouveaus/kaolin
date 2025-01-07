@@ -7,8 +7,14 @@ add_subdirectory(tools)
 
 add_custom_command(
         OUTPUT "os.img"
-        COMMAND cat "bootloader/boot.bin" $<TARGET_FILE:kernel> > "os.img"
-        DEPENDS "bootloader/boot.bin" $<TARGET_FILE:kernel>
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/bind_kernel.py
+                --bootloader "bootloader/boot.bin"
+                --kernel $<TARGET_FILE:kernel>
+                --entry 0x2000
+                --output "os.img"
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/bind_kernel.py
+                "bootloader/boot.bin"
+                $<TARGET_FILE:kernel>
         COMMENT "Link bootloader with kernel image"
 )
 

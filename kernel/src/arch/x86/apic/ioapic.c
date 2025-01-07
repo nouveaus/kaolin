@@ -2,21 +2,21 @@
 
 #include <stdint.h>
 
-uint32_t ioapic_read_reg(void *ioapicaddr, const uint32_t reg) {
-    uint32_t volatile *const ioapic = (uint32_t volatile *const)ioapicaddr;
+uint32_t ioapic_read_reg(void *ioapicaddr, uint32_t reg) {
+    uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
     ioapic[0] = reg;
 
     // window of ioapic
     return ioapic[4];
 }
 
-void ioapic_write_reg(void *ioapicaddr, const uint32_t reg, const uint32_t value) {
-   uint32_t volatile *const ioapic = (uint32_t volatile *const)ioapicaddr;
+void ioapic_write_reg(void *ioapicaddr, uint32_t reg, uint32_t value) {
+   uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
    ioapic[0] = reg;
    ioapic[4] = value;
 }
 
-void ioapic_set_redirect(void *ioapicaddr, const uint8_t irq, const uint8_t vector, const uint8_t apic_id) {
+void ioapic_set_redirect(void *ioapicaddr, uint8_t irq, uint8_t vector, uint8_t apic_id) {
     // Redirects hardware interupts to local apic
     // Refer to Intel IA-32 Volume 3 12.6.1 Interrupt Command Register
     // This accesses the lower 32 bits

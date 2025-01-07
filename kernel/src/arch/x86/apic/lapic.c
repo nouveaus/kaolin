@@ -40,13 +40,13 @@ static uintptr_t cpu_get_apic_base(void) {
 
 #define BASE_LAPIC 0xFEE00000
 
-void write_reg(void *const lapicbase, uint32_t reg, uint32_t value) {
-    uint32_t volatile *const lapic = (uint32_t volatile *const)lapicbase;
+void write_reg(void *lapicbase, uint32_t reg, uint32_t value) {
+    uint32_t volatile *lapic = (uint32_t volatile *)lapicbase;
     lapic[reg] = value;
 }
 
-uint32_t read_reg(void *const lapicbase, uint32_t reg) {
-    uint32_t volatile *const lapic = (uint32_t volatile *const)lapicbase;
+uint32_t read_reg(void *lapicbase, uint32_t reg) {
+    uint32_t volatile *lapic = (uint32_t volatile *)lapicbase;
     return lapic[reg];
 }
 

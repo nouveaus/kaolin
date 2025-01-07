@@ -1,6 +1,6 @@
 #include "memmap.h"
 
-#include "../io/io.h"
+#include "../../../io.h"
 #include "../klib/klib.h"
 
 #include <stddef.h>

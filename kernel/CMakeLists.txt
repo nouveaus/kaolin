@@ -17,6 +17,7 @@ add_executable(kernel
         src/arch/x86/serial/serial.c
         src/arch/x86/vga/vga.c
         src/kernel_main.c
+        src/io.c
 )
 
 set_target_properties(kernel PROPERTIES

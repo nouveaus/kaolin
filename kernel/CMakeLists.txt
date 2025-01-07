@@ -1,24 +1,26 @@
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel.ld")
 
 add_executable(kernel
-        src/arch/x86/acpi/acpi.c
-        src/arch/x86/apic/ioapic.c
-        src/arch/x86/apic/lapic.c
-        src/arch/x86/cpu/cpuid.c
-        src/arch/x86/cpu/long_mode.c
-        src/arch/x86/cpu/msr.c
-        src/arch/x86/cpu/idt.c
-        src/arch/x86/cpu/gdt.c
-        src/arch/x86/drivers/keyboard/keyboard.c
-        src/arch/x86/drivers/timer/timer.c
-        src/arch/x86/io/io.c
-        src/arch/x86/memory/memmap.c
-        src/arch/x86/klib/klib.c
-        src/arch/x86/serial/serial.c
-        src/arch/x86/vga/vga.c
+        src/arch/x86_64/acpi/acpi.c
+        src/arch/x86_64/apic/ioapic.c
+        src/arch/x86_64/apic/lapic.c
+        src/arch/x86_64/cpu/cpuid.c
+        src/arch/x86_64/cpu/long_mode.c
+        src/arch/x86_64/cpu/msr.c
+        src/arch/x86_64/cpu/idt.c
+        src/arch/x86_64/cpu/gdt.c
+        src/arch/x86_64/drivers/keyboard/keyboard.c
+        src/arch/x86_64/drivers/timer/timer.c
+        src/arch/x86_64/io/io.c
+        src/arch/x86_64/memory/memmap.c
+        src/arch/x86_64/klib/klib.c
+        src/arch/x86_64/serial/serial.c
+        src/arch/x86_64/vga/vga.c
         src/kernel_main.c
         src/io.c
 )
+
+
 
 set_target_properties(kernel PROPERTIES
         LINKER_LANGUAGE C

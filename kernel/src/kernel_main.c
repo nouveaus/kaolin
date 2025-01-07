@@ -3,6 +3,8 @@
 #include "arch/x86/cpu/cpuid.h"
 #include "arch/x86/cpu/msr.h"
 #include "arch/x86/cpu/idt.h"
+#include "arch/x86/cpu/long_mode.h"
+#include "arch/x86/cpu/gdt.h"
 #include "arch/x86/apic/lapic.h"
 #include "arch/x86/apic/ioapic.h"
 #include "arch/x86/acpi/acpi.h"
@@ -18,8 +20,13 @@ static void setup_idt(void);
 void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt" ::); }
 
 void exception_handler(void) {
-    asm volatile ("pusha\n");
+    //asm volatile ("pusha\n");
     puts("Fatal Error Occurred!");
+    _die();
+}
+
+void _Noreturn kernel_main_64() {
+    puts("entered long mode!!!");
     _die();
 }
 
@@ -28,6 +35,8 @@ void exception_handler(void) {
  */
 void _Noreturn kernel_main(struct boot_parameters parameters) {
     vga_initialize();
+    vga_putchar('a');
+    vga_putchar('b');
 
     uint32_t eax, ebx, ecx, edx;
     // get vendor string
@@ -46,10 +55,23 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
 
     read_acpi();
 
-    enable_apic();
+    puts("test");
+    _die();
 
-    setup_idt();
+    if (!long_mode_is_supported()) {
+        puts("Long mode is not supported\n");
+        _die();
+    }
+    
+    setup_paging();
+    enable_long_mode();
+    enter_long_mode(kernel_main_64);
+    
+    // enable_apic();
 
+    // setup_idt();
+    
+    /*
     char message[] = "X Hello world!\n";
     unsigned int i = 0;
 
@@ -65,6 +87,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
 
         ksleep(276447232);
     }
+    */
 }
 
 static void read_acpi(void) {

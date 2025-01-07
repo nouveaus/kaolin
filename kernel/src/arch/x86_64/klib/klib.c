@@ -9,9 +9,9 @@ void ksleep(int ticks) {
 }
 
 void trap(void) {
-    asm volatile ("pusha\n");
+    //asm volatile ("pusha\n");
     puts("Trap\n");
-    asm volatile ("popa\nleave\niret");
+    asm volatile (/*"popa\n*/"leave\niretq");
 }
 
 

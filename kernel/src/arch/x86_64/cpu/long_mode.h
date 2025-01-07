@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 /*
 0x8000
 the address straight after the other sector

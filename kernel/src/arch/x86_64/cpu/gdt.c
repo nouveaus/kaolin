@@ -39,7 +39,7 @@ struct gdt_64_pointer {
     uint64_t address;
 } __attribute__((packed));
 
-void enter_long_mode(void* main_function) {
+void _Noreturn enter_long_mode(void* main_function) {
     struct gdt_64_pointer pointer = {.size = sizeof(gdt) - 1,
                                      .address = (uint64_t)&gdt};
     asm volatile("lgdt %0" ::"m"(pointer));

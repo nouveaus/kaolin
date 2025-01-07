@@ -9,7 +9,7 @@ uint32_t get_timer_ticks(void) {
 }
 
 void timer_handler(void) {
-    asm volatile ("pusha\n");
+    //asm volatile ("pusha\n");
     send_apic_eoi();
-    asm volatile ("popa\nleave\niret");
+    asm volatile (/*"popa\n*/"leave\niretq");
 }

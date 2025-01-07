@@ -29,7 +29,7 @@ void setup_paging(void) {
 // 4096 dwords = 16384 bytes (size of tables)
 #define PAGING_TABLE_SIZE 4096
     // sets the paging address
-    asm volatile("mov %%eax, %%cr3\n" : : "a"(PAGING_TABLE_START_ADDRESS));
+    asm volatile("mov %0, %%cr3\n" : : "r"((uint64_t)PAGING_TABLE_START_ADDRESS));
     uint32_t *paging_table = (uint32_t*)PAGING_TABLE_START_ADDRESS;
     // clear out space
     for (size_t i = 0; i < PAGING_TABLE_SIZE; i++) {

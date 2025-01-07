@@ -99,4 +99,4 @@ struct gdt_64 {
     } tss;
 } __attribute__((packed));
 
-void enter_long_mode(void* main_function);
+void _Noreturn enter_long_mode(void* main_function);

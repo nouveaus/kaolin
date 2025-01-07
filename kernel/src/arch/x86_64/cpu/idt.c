@@ -6,7 +6,7 @@ struct interrupt_descriptor interrupt_descriptors[256] = { 0 };
 
 struct idt_descriptor idt_descriptor = {
     .idt_size = sizeof(interrupt_descriptors) - 1,
-    .idt_start = (uint32_t)&interrupt_descriptors[0]
+    .idt_start = (uint64_t)&interrupt_descriptors[0]
 };
 
 static uint16_t idt_segment_descriptor(uint16_t index) {

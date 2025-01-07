@@ -13,7 +13,7 @@ struct interrupt_descriptor {
 
 struct idt_descriptor {
     uint16_t idt_size;
-    uint32_t idt_start;
+    uint64_t idt_start;
 } __attribute__((packed));
 
 enum gate_type {

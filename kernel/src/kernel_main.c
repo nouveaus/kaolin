@@ -12,8 +12,8 @@
 #include "arch/x86/drivers/timer/timer.h"
 #include "io.h"
 
-static inline void read_acpi(void);
-static inline void setup_idt(void);
+static void read_acpi(void);
+static void setup_idt(void);
 
 void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt" ::); }
 
@@ -67,7 +67,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     }
 }
 
-static inline void read_acpi(void) {
+static void read_acpi(void) {
     if (!rsdp_find()) {
         puts("Could not find RSDP\n");
         _die();
@@ -108,7 +108,7 @@ static inline void read_acpi(void) {
     krintf("Address is %x\n", get_first_ioapic_address());
 }
 
-static inline void setup_idt(void) {
+static void setup_idt(void) {
     int apic_id = apic_get_id();
     krintf("APIC ID: %d\n", apic_id);
 

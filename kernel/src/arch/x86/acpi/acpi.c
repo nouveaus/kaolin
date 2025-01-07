@@ -52,7 +52,7 @@ uint8_t rsdp_get_revision(void) {
     return rsdp->revision;
 }
 
-static inline struct rsdt *rsdt_get(void) {
+static struct rsdt *rsdt_get(void) {
     return (struct rsdt *)rsdp->rsdt_address;
 }
 

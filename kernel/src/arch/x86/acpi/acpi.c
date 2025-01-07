@@ -112,7 +112,7 @@ size_t ioapic_get_entry_count(void) {
     // todo: rewrite when heap is implemented
     while ((uint8_t *)madt_entry < end) {
         if (madt_entry->type == 1) {
-            // we cast it 
+            // we cast it
             struct madt_entry_apicio *madt_entry_apicio = (struct madt_entry_apicio*)madt_entry;
             if (!ioapic_address) ioapic_address = madt_entry_apicio->ioapic_address;
             count++;

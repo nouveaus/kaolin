@@ -7,7 +7,7 @@
 
 void keyboard_handler(void) {
     asm volatile ("pusha\n");
-    // Consume a key, not doing this will only let 
+    // Consume a key, not doing this will only let
     // the interrupt trigger once
     inb(0x60);
     puts("Keyboard pressed");

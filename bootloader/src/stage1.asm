@@ -49,13 +49,16 @@ init_pm:
 	mov	eax, [mmap_buf]
 	push	eax
 	; finally enter the kernel in 32-bit protected mode
-	call	KERNEL_ENTRY
+	call	[kernel_entry]
 
 	; we shouldn't have gotten here, disable interrupts and sleep
 	cli
 	hlt
 
 .success_init_pm_msg db "init_pm successful", 0
+
+kernel_entry:
+	dd	0
 
 ; Imports for sector 2 (32 bits)
 

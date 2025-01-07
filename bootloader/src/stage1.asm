@@ -41,11 +41,11 @@ init_pm:
 	call	print_vga
 	call	cpuid_avaliability
 
-;	struct memory_range_descriptor memory_range_descriptor[]
+;	struct address_range_descriptor *address_ranges
 	lea	eax, [mmap_buf+4]
 	push	eax
 
-;	uint32_t entry_count
+;	uint32_t address_range_count
 	mov	eax, [mmap_buf]
 	push	eax
 	; finally enter the kernel in 32-bit protected mode

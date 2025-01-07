@@ -13,10 +13,10 @@ int apic_get_id(void);
 void enable_apic(void);
 
 // Read apic register
-uint32_t read_reg(void *const ioapicaddr, uint32_t reg);
+uint32_t read_reg(void *ioapicaddr, uint32_t reg);
 
 // Write to apic register
-void write_reg(void *const ioapicaddr, uint32_t reg, uint32_t value);
+void write_reg(void *ioapicaddr, uint32_t reg, uint32_t value);
 
 // Signal end of interrupt to apic
 void send_apic_eoi(void);

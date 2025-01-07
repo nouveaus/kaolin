@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "../io/io.h"
+#include "../../../io.h"
 
 #define BIOS_MEMORY_BEGIN 0x0E0000
 #define BIOS_MEMORY_END 0xFFFFF
@@ -52,7 +52,7 @@ uint8_t rsdp_get_revision(void) {
     return rsdp->revision;
 }
 
-static inline struct rsdt *rsdt_get(void) {
+static struct rsdt *rsdt_get(void) {
     return (struct rsdt *)rsdp->rsdt_address;
 }
 

@@ -33,7 +33,6 @@ void hex(uint32_t num) {
     for (int i = sizeof(num) * 8 - 4; i >= 0; i -= 4) {
         putc("0123456789ABCDEF"[(num >> i) & 0xF]);
     }
-    putc('\n');
 }
 
 

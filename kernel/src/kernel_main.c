@@ -1,11 +1,16 @@
 #include "arch/x86/vga/vga.h"
 #include "arch/x86/cpu/cpuid.h"
 #include "arch/x86/cpu/msr.h"
+#include "arch/x86/cpu/idt.h"
 #include "arch/x86/apic/lapic.h"
 #include "arch/x86/apic/ioapic.h"
 #include "arch/x86/io/io.h"
 #include "arch/x86/acpi/acpi.h"
 #include "arch/x86/memory/memmap.h"
+#include "arch/x86/serial/serial.h"
+#include "arch/x86/klib/klib.h"
+#include "arch/x86/drivers/keyboard/keyboard.h"
+#include "arch/x86/drivers/timer/timer.h"
 
 #include <stdint.h>
 
@@ -13,8 +18,15 @@
 void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor address_range_descriptor[]) __attribute__((section(".text.kernel_main")));
 
 static inline void read_acpi(void);
+static inline void setup_idt(void);
 
 void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt" ::); }
+
+void exception_handler(void) {
+    asm volatile ("pusha\n");
+    puts("Fatal Error Occurred!");
+    _die();
+}
 
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected mode.
@@ -41,14 +53,7 @@ void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor
 
     enable_apic();
 
-    // todo: load idt here
-
-    int apic_id = apic_get_id();
-    krintf("APIC ID: %d\n", apic_id);
-
-    // we have interrupt after 31 since 0-31 are reserved for errors
-    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 0x20, apic_id);
-
+    setup_idt();
 
     char message[] = "X Hello world!\n";
     unsigned int i = 0;
@@ -57,16 +62,12 @@ void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor
         message[0] = '0' + i;
         i = (i + 1) % 10;
 
-        krintf("%sThe number is: %d, float is: %f, entry count: %d\n", message, 5, 3.9999, entry_count);
-
+        //vga_write_string(message);
+        krintf("%sThe number is: %d, float is: %f, ticks: %d, entry count: %d\n", message, 5, 3.9999, get_timer_ticks(), entry_count);
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
+        asm volatile ("int %0" : : "i"(0x80) : "memory");
 
-        // busy sleep loop
-        for (unsigned s = 0; s != 500000000; s++) {
-            asm volatile(""::);
-        }
-
-        memmap_print_entries(entry_count, address_range_descriptor);
+        ksleep(276447232);
     }
 }
 
@@ -109,4 +110,25 @@ static inline void read_acpi(void) {
     krintf("Detected %d ioapic on device\n", count);
 
     krintf("Address is %x\n", get_first_ioapic_address());
+}
+
+static inline void setup_idt(void) {
+    int apic_id = apic_get_id();
+    krintf("APIC ID: %d\n", apic_id);
+
+    // system timer
+    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 0, 0x20, apic_id);
+    // keyboard
+    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 1, 0x21, apic_id);
+
+    for (size_t vector = 0; vector < 32; vector++) {
+        setup_interrupt_gate(vector, exception_handler, INTERRUPT_32_GATE, 0);
+    }
+
+    // we have interrupt after 31 since 0-31 are reserved for errors
+    setup_interrupt_gate(0x20, timer_handler, INTERRUPT_32_GATE, 0);
+    setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_32_GATE, 0);
+    setup_interrupt_gate(0x80, trap, TRAP_32_GATE, 0);
+
+    load_idt();
 }

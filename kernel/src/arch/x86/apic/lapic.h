@@ -18,3 +18,11 @@ uint32_t read_reg(void *const ioapicaddr, uint32_t reg);
 // Write to apic register
 void write_reg(void *const ioapicaddr, uint32_t reg, uint32_t value);
 
+// Signal end of interrupt to apic
+void send_apic_eoi(void);
+
+// Initialises the apic timer
+void init_apic_timer(uint32_t initial_count, uint8_t vector);
+
+// Get the current count of apic timer
+uint32_t get_apic_timer_current(void);

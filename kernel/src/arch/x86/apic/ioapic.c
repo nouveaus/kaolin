@@ -16,11 +16,11 @@ void ioapic_write_reg(void *ioapicaddr, const uint32_t reg, const uint32_t value
    ioapic[4] = value;
 }
 
-void ioapic_set_redirect(void *ioapicaddr, const uint8_t vector, const uint8_t apic_id) {
+void ioapic_set_redirect(void *ioapicaddr, const uint8_t irq, const uint8_t vector, const uint8_t apic_id) {
     // Redirects hardware interupts to local apic
     // Refer to Intel IA-32 Volume 3 12.6.1 Interrupt Command Register
     // This accesses the lower 32 bits
-    uint8_t low_idx = 0x10 + vector * 2;
+    uint8_t low_idx = 0x10 + irq * 2;
 
     // This accesses the higher 32 bits
     uint8_t high_idx = low_idx + 1;

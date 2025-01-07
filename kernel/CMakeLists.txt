@@ -1,6 +1,6 @@
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel.ld")
 
-add_executable(kernel 
+add_executable(kernel
         src/arch/x86/acpi/acpi.c
         src/arch/x86/apic/ioapic.c
         src/arch/x86/apic/lapic.c
@@ -10,6 +10,7 @@ add_executable(kernel
         src/arch/x86/drivers/keyboard/keyboard.c
         src/arch/x86/drivers/timer/timer.c
         src/arch/x86/io/io.c
+        src/arch/x86/memory/memmap.c
         src/arch/x86/klib/klib.c
         src/arch/x86/serial/serial.c
         src/arch/x86/vga/vga.c

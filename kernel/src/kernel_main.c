@@ -6,15 +6,16 @@
 #include "arch/x86/apic/ioapic.h"
 #include "arch/x86/io/io.h"
 #include "arch/x86/acpi/acpi.h"
+#include "arch/x86/memory/memmap.h"
 #include "arch/x86/serial/serial.h"
-
 #include "arch/x86/klib/klib.h"
 #include "arch/x86/drivers/keyboard/keyboard.h"
 #include "arch/x86/drivers/timer/timer.h"
 
 #include <stdint.h>
 
-void _Noreturn kernel_main(void) __attribute__((section(".text.kernel_main")));
+
+void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor address_range_descriptor[]) __attribute__((section(".text.kernel_main")));
 
 static inline void read_acpi(void);
 static inline void setup_idt(void);
@@ -30,7 +31,7 @@ void exception_handler(void) {
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected mode.
  */
-void _Noreturn kernel_main(void) {
+void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor address_range_descriptor[]) {
     vga_initialize();
 
     uint32_t eax, ebx, ecx, edx;
@@ -62,8 +63,9 @@ void _Noreturn kernel_main(void) {
         i = (i + 1) % 10;
 
         //vga_write_string(message);
-        krintf("%sThe number is: %d, float is: %f, ticks: %d\n", message, 5, 3.9999, get_timer_ticks());
+        krintf("%sThe number is: %d, float is: %f, ticks: %d, entry count: %d\n", message, 5, 3.9999, get_timer_ticks(), entry_count);
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
+        memmap_print_entries(entry_count, address_range_descriptor);
         asm volatile ("int %0" : : "i"(0x80) : "memory");
 
         ksleep(276447232);

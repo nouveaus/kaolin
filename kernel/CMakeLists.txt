@@ -10,11 +10,8 @@ add_executable(kernel
         src/arch/x86/drivers/keyboard/keyboard.c
         src/arch/x86/drivers/timer/timer.c
         src/arch/x86/io/io.c
-<<<<<<< HEAD
         src/arch/x86/memory/memmap.c
-=======
         src/arch/x86/klib/klib.c
->>>>>>> 4aafccfcb98e5d217b9aeffdc8f95d934b4a10c9
         src/arch/x86/serial/serial.c
         src/arch/x86/vga/vga.c
         src/kernel_main.c

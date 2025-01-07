@@ -1,21 +1,16 @@
+#include "arch/x86/kernel_main.h"
 #include "arch/x86/vga/vga.h"
 #include "arch/x86/cpu/cpuid.h"
 #include "arch/x86/cpu/msr.h"
 #include "arch/x86/cpu/idt.h"
 #include "arch/x86/apic/lapic.h"
 #include "arch/x86/apic/ioapic.h"
-#include "arch/x86/io/io.h"
 #include "arch/x86/acpi/acpi.h"
-#include "arch/x86/memory/memmap.h"
 #include "arch/x86/serial/serial.h"
 #include "arch/x86/klib/klib.h"
 #include "arch/x86/drivers/keyboard/keyboard.h"
 #include "arch/x86/drivers/timer/timer.h"
-
-#include <stdint.h>
-
-
-void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor address_range_descriptor[]) __attribute__((section(".text.kernel_main")));
+#include "arch/x86/io/io.h"
 
 static inline void read_acpi(void);
 static inline void setup_idt(void);
@@ -31,7 +26,7 @@ void exception_handler(void) {
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected mode.
  */
-void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor address_range_descriptor[]) {
+void _Noreturn kernel_main(struct boot_parameters parameters) {
     vga_initialize();
 
     uint32_t eax, ebx, ecx, edx;
@@ -63,9 +58,9 @@ void _Noreturn kernel_main(uint32_t entry_count, struct address_range_descriptor
         i = (i + 1) % 10;
 
         //vga_write_string(message);
-        krintf("%sThe number is: %d, float is: %f, ticks: %d, entry count: %d\n", message, 5, 3.9999, get_timer_ticks(), entry_count);
+        krintf("%sThe number is: %d, float is: %f, ticks: %d, entry count: %d\n", message, 5, 3.9999, get_timer_ticks(), parameters.address_range_count);
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
-        memmap_print_entries(entry_count, address_range_descriptor);
+        memmap_print_entries(parameters.address_range_count, parameters.address_ranges);
         asm volatile ("int %0" : : "i"(0x80) : "memory");
 
         ksleep(276447232);

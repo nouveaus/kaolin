@@ -18,9 +18,23 @@
 	mov	dword	[dap_lba], 0x1
 	call	disk_load_lba
 
-	mov	dword	[dap_dest], KERNEL_ENTRY
-	mov	word	[dap_sectors], KERNEL_SECTORS
+	; temporarily load kernel image metadata
+	; 0x2000..0x2004 : uintptr_t entry
+	; 0x2000..0x2006 : uint16_t sectors
+	mov	dword	[dap_dest], 0x2000
+	mov	word	[dap_sectors], 1
 	mov	dword	[dap_lba], 0x2
+	call	disk_load_lba
+
+	mov	eax,	dword [0x2000]
+	mov	dword	[dap_dest], eax
+	mov	dword	[kernel_entry], eax
+
+	mov	ax,	word [0x2004]
+	mov	word	[dap_sectors], ax
+
+	; load actual kernel image
+	mov	dword	[dap_lba], 0x3
 	call	disk_load_lba
 
 	call	enable_a20

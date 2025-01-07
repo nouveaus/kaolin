@@ -47,7 +47,7 @@ void hex(uint32_t num) {
         putc('0' + ((val) % 10));           \
     } while (0)
 
-void putf(double f) {
+void putd(double f) {
     if (f < 0.0) {
         putc('-');
         f = -f;
@@ -107,7 +107,7 @@ void krintf(const char *format, ...) {
                 }
                 case 'f': {
                     double value = va_arg(args, double);
-                    putf(value);
+                    putd(value);
                     break;
                 }
                 case 'x': {

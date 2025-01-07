@@ -25,7 +25,7 @@ detect_memory:
 	jc	.detect_memory_err
 	cmp	eax,	0x534D4150 ; eax is set to SMAP on success
 	jne	.detect_memory_err
-	
+
 	jcxz	.detect_memory_post ; skip 0 length entries
 	inc	bp
 	add	di,	24
@@ -45,6 +45,3 @@ detect_memory:
 	hlt
 
 .detect_memory_err_msg: db "Detecting upper memory fail!", 0
-
-
-

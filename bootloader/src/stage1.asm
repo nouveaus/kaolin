@@ -44,7 +44,7 @@ init_pm:
 ;	struct memory_range_descriptor memory_range_descriptor[]
 	lea	eax, [mmap_buf+4]
 	push	eax
-	
+
 ;	uint32_t entry_count
 	mov	eax, [mmap_buf]
 	push	eax

@@ -1,6 +1,6 @@
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel.ld")
 
-add_executable(kernel 
+add_executable(kernel
         src/arch/x86/acpi/acpi.c
         src/arch/x86/apic/ioapic.c
         src/arch/x86/apic/lapic.c

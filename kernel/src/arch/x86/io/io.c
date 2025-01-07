@@ -16,11 +16,11 @@ void puti(int num) {
         vga_putchar('-');
         num = -num;
     }
-    
+
     // this finds the biggest divisor for the number
     int div = 1;
     while (num / div >= 10) div *= 10;
-    
+
     while (div > 0) {
         vga_putchar((num / div) + '0');
         num %= div;
@@ -58,19 +58,19 @@ void putf(double f) {
     int int_part = f;
     const int scale = 10000000;
     int frac = (f - (int)f) * scale + 0.5;
-    
+
     if (frac == scale) {
         frac = 0;
         int_part++;
     }
-    
+
     puti(int_part);
     putc('.');
     // we lose precision if we use puti here
     PRINT_7_FRAC_DIGITS(frac);
 }
 
-void putc(const char c) { 
+void putc(const char c) {
     vga_putchar(c);
 }
 
@@ -116,7 +116,7 @@ void krintf(const char *format, ...) {
                     hex(value);
                     break;
                 }
-                default: 
+                default:
                     putc('%');
                     putc(c);
                     break;

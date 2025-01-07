@@ -1,5 +1,5 @@
 #include "cpuid.h"
-#include "../io/io.h"
+#include "../../../io.h"
 
 void print_vendor(unsigned int ebx, unsigned int ecx, unsigned int edx) {
     char vendor[14];

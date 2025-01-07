@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "../io/io.h"
+#include "../../../io.h"
 
 #define BIOS_MEMORY_BEGIN 0x0E0000
 #define BIOS_MEMORY_END 0xFFFFF

@@ -10,7 +10,7 @@
 #include "arch/x86/klib/klib.h"
 #include "arch/x86/drivers/keyboard/keyboard.h"
 #include "arch/x86/drivers/timer/timer.h"
-#include "arch/x86/io/io.h"
+#include "io.h"
 
 static inline void read_acpi(void);
 static inline void setup_idt(void);

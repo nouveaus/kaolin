@@ -1,7 +1,7 @@
 #include "klib.h"
 
 #include "../apic/lapic.h"
-#include "../io/io.h"
+#include "../../../io.h"
 
 void ksleep(int ticks) {
     init_apic_timer(ticks, 0x20);

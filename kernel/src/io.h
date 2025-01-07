@@ -4,13 +4,13 @@
 void puti(int num);
 
 // Prints the character given to the terminal
-void putc(const char c);
+void putc(char c);
 
 // Prints the string given to the terminal
 void puts(const char *s);
 
 // Prints the double given to the terminal
-void putd(const double f);
+void putd(double f);
 
 /* Prints the formatted string given to the terminal
  * format specifiers:

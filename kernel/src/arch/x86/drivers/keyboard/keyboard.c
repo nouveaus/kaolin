@@ -2,7 +2,7 @@
 
 #include "../../apic/lapic.h"
 #include "../../serial/serial.h"
-#include "../../io/io.h"
+#include "../../../../io.h"
 
 
 void keyboard_handler(void) {

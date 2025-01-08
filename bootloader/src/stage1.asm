@@ -3,27 +3,14 @@
 ; SECOND SEGMENT
 second_segement_start:
 
-success_disk_load:
-	pusha
-
-	mov	bx,	.success_disk_load_msg
-	call	print
-
-	popa
-	ret
-
-.success_disk_load_msg: db "Disk load successful", 13, 10, 0
-
 ; Imports for sector 2 (16 bits)
-
 %include "a20.asm"
-%include "pm.asm"
+%include "lm.asm"
 
-[bits 32]
+[bits 64]
 
 ; Move to own file later
-init_pm:
-
+boot_kernel:
 	mov	ax,	DATA_SEG
 	mov	ds,	ax
 	mov	ss,	ax
@@ -32,23 +19,24 @@ init_pm:
 	mov	gs,	ax
 
 ; New stack
-	mov	ebp,	0x70000
-	mov	esp,	ebp
+	mov 	rbp, 	0x70000
+	mov 	rsp, 	rbp
 
-; protected mode is on from here onwards
+
+; long mode is on from here onwards
 
 	mov	ebx,	.success_init_pm_msg
 	call	print_vga
-	call	cpuid_avaliability
+	hlt
 
 ;	struct address_range_descriptor *address_ranges
-	lea	eax, [mmap_buf+4]
-	push	eax
+	lea	rax, [mmap_buf+4]
+	push	rax
 
 ;	uint32_t address_range_count
-	mov	eax, [mmap_buf]
-	push	eax
-	; finally enter the kernel in 32-bit protected mode
+	mov	rax, [mmap_buf]
+	push	rax 
+;	finally enter the kernel in 32-bit protected mode
 	call	[kernel_entry]
 
 	; we shouldn't have gotten here, disable interrupts and sleep
@@ -58,11 +46,10 @@ init_pm:
 .success_init_pm_msg db "init_pm successful", 0
 
 kernel_entry:
-	dd	0
+	dq	0
 
 ; Imports for sector 2 (32 bits)
 
 %include "io32.asm"
-%include "cpuid.asm"
 
 times 512-($-second_segement_start) db 0

@@ -1,10 +1,11 @@
-[bits 32]
+[bits 64]
 
 VIDEO_MEMORY	equ 0xB8000
 WHITE_ON_BLACK	equ 0x0F
 
 print_vga:
-        pusha
+	push	rax
+	push	rdx
         mov	edx,	VIDEO_MEMORY
 
 ; TODO: Optimise this later (e.g. could use lodsb)
@@ -23,5 +24,6 @@ print_vga:
 	jmp	.print_vga_loop
 
 .print_vga_loop_end:
-	popa
+	pop	rdx
+	pop	rax
 	ret

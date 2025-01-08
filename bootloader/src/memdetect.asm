@@ -1,8 +1,11 @@
 [bits 16]
 
 ; https://wiki.osdev.org/Detecting_Memory_(x86)#BIOS_Function:_INT_0x15,_EAX_=_0xE820
-; 0xC000 is address after paging (0x8000) + 4 tables (0x1000 each)
-mmap_buf	equ	0xC000
+; 0x8000
+; the address straight after the other sector
+; of the bootloader
+; we load before from 0x7e00
+mmap_buf	equ	0x8000
 detect_memory:
 	pusha
 ; 	just in case

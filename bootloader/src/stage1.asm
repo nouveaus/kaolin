@@ -11,6 +11,7 @@ second_segement_start:
 
 ; Move to own file later
 boot_kernel:
+
 	mov	ax,	DATA_SEG
 	mov	ds,	ax
 	mov	ss,	ax
@@ -22,12 +23,10 @@ boot_kernel:
 	mov 	rbp, 	0x70000
 	mov 	rsp, 	rbp
 
-
 ; long mode is on from here onwards
 
-	mov	ebx,	.success_init_pm_msg
+	mov	rbx,	.success_init_pm_msg
 	call	print_vga
-	hlt
 
 ;	struct address_range_descriptor *address_ranges
 	lea	rax, [mmap_buf+4]
@@ -37,6 +36,7 @@ boot_kernel:
 	mov	rax, [mmap_buf]
 	push	rax 
 ;	finally enter the kernel in 32-bit protected mode
+	hlt
 	call	[kernel_entry]
 
 	; we shouldn't have gotten here, disable interrupts and sleep
@@ -50,6 +50,6 @@ kernel_entry:
 
 ; Imports for sector 2 (32 bits)
 
-%include "io32.asm"
+%include "io64.asm"
 
 times 512-($-second_segement_start) db 0

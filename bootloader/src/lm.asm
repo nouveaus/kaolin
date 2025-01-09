@@ -1,10 +1,9 @@
 [bits 16]
 
-
-
 PAGE_PRESENT    equ (1 << 0)
 PAGE_WRITE      equ (1 << 1)
 
+; check if it collides with anything later on
 paging_table_buffer equ 0x9000
 
 gdt:
@@ -55,13 +54,16 @@ gdt_descriptor:
 
 ; pusha and popa used to be here
 init_vga:
+	pusha
 	mov	ax,	0x3
 	int	0x10
+	popa
 	ret
 
 switch_to_lm:
 	; todo: move paging to its own file
-
+	pusha
+	
 	; zero out 16kib buffer for 4 page tables
 	push	di
 	mov	ecx, 	0x1000
@@ -69,6 +71,8 @@ switch_to_lm:
 	cld
 	rep	stosd
 	pop	di
+
+	cli
 
 	; point the page map level 4 [0]
 	; to the page directory pointer table
@@ -96,7 +100,6 @@ switch_to_lm:
 
 	; initialise variables before build
 	push	di
-	; todo: check why di later for base
 	lea	di, 	[di + 0x3000]
 	mov	eax, 	PAGE_PRESENT | PAGE_WRITE
 
@@ -112,11 +115,8 @@ switch_to_lm:
 	jb	.loop_page_table
 	pop	di
 
-	; for now ignore interrupts
-	cli
-
 	; set pae and pge bit
-	mov	eax, 	1010000b
+	mov	eax, 	10100000b
 	mov	cr4,	eax
 
 	; point cr3 to PML4
@@ -138,6 +138,7 @@ switch_to_lm:
 
 	lgdt	[gdt_descriptor]
 
+	popa
 	ret
 
 CODE_SEG equ gdt.gdt_code - gdt.gdt_start

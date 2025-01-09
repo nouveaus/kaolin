@@ -41,20 +41,18 @@
 	call	detect_memory
 	call	cpuid_avaliability
 
+	call	init_vga
+
 	mov	edi, paging_table_buffer
 
 	call	switch_to_lm
-
-	mov	bx,	success_a20_msg
-	call	print
-
-	call	init_vga
+	
 
 	; breaks here
 	jmp	CODE_SEG:boot_kernel
 
 success_stack_msg: db "Stack is initialised", 13, 10, 0
-success_a20_msg: db "Good!", 13, 10, 0
+success_a20_msg: db "A20 is initialised", 13, 10, 0
 
 ; Imports for sector 1
 

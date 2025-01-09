@@ -11,4 +11,4 @@ struct boot_parameters {
     struct address_range_descriptor *address_ranges;
 };
 
-void _Noreturn kernel_main(struct boot_parameters parameters) __attribute__((section(".text.kernel_main"), cdecl));
+void _Noreturn kernel_main(struct boot_parameters parameters) __attribute__((section(".text.kernel_main")));

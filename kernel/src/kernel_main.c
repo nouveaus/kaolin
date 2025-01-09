@@ -46,7 +46,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     }
 
     read_acpi(parameters.pml4);
-    
+
     if (!map_apic(parameters.pml4)) {
         puts("Could not map apic to virtual memory!\n");
         _die();
@@ -59,10 +59,10 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
         puts("Could not map ioapic to virtual memory!\n");
         _die();
     }
-    
+
     setup_idt();
     puts("Successfully loaded idt\n");
-    
+
     char message[] = "X Hello world!\n";
     unsigned int i = 0;
 
@@ -75,12 +75,12 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
 
         // fatal error occurs here
         krintf("%sThe number is: %d, ticks: %d, entry count: %d\n", message, 5, get_timer_ticks(), parameters.address_range_count);
-        
+
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
         memmap_print_entries(parameters.address_range_count, parameters.address_ranges);
-        
+
         asm volatile ("int %0" : : "i"(0x80) : "memory");
-        
+
         ksleep(276447232);
     }
 }

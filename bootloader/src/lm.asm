@@ -40,8 +40,8 @@ gdt:
 	; Flags (4 higher bits)
 	db	0x0
 	; Base Address High (16 bits) (ignored)
-	dw	0x0	
-	
+	dw	0x0
+
 	; align on 4 byte boundary
 	align	4
 	dw	0
@@ -63,7 +63,7 @@ init_vga:
 switch_to_lm:
 	; todo: move paging to its own file
 	pusha
-	
+
 	; zero out 16kib buffer for 4 page tables
 	push	di
 	mov	ecx, 	0x1000

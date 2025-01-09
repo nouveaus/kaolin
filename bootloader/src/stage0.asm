@@ -46,7 +46,7 @@
 	mov	edi, paging_table_buffer
 
 	call	switch_to_lm
-	
+
 
 	; breaks here
 	jmp	CODE_SEG:boot_kernel

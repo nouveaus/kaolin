@@ -86,9 +86,9 @@ bool madt_find(uint64_t *pml4) {
     size_t length = rsdt_get_entry_count();
     struct rsdt *rsdt =
         (struct rsdt *)(KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
-    
+
     for (size_t i = 0; i < length; i++) {
-        map_page(pml4, KERNEL_MAPPING_ADDRESS | (uint64_t)rsdt->entry[i], (uint64_t)rsdt->entry[i], PAGE_PRESENT);        
+        map_page(pml4, KERNEL_MAPPING_ADDRESS | (uint64_t)rsdt->entry[i], (uint64_t)rsdt->entry[i], PAGE_PRESENT);
         // triple faults here
         struct description_header *description_header =
             (struct description_header *)(KERNEL_MAPPING_ADDRESS | (uint64_t)rsdt->entry[i]);

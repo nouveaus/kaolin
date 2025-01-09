@@ -8,6 +8,7 @@
 #include "arch/x86_64/acpi/acpi.h"
 #include "arch/x86_64/serial/serial.h"
 #include "arch/x86_64/klib/klib.h"
+#include "arch/x86_64/memory/paging.h"
 #include "arch/x86_64/drivers/keyboard/keyboard.h"
 #include "arch/x86_64/drivers/timer/timer.h"
 #include "io.h"
@@ -66,6 +67,19 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     char message[] = "X Hello world!\n";
     unsigned int i = 0;
 
+    uint64_t test_virtual_address = (KERNEL_MAPPING_ADDRESS | 0xFFFFFFF);
+    map_page(parameters.pml4, test_virtual_address, 0xFFFFFFF, PAGE_PRESENT);
+    if (!verify_mapping(parameters.pml4, test_virtual_address)) {
+        puts("Could not page correctly!\n");
+        _die();
+    }
+    free_address(parameters.pml4, test_virtual_address);
+    if (verify_mapping(parameters.pml4, test_virtual_address)) {
+        puts("Could not free virtual address correctly!\n");
+        _die();
+    }
+
+    puts("Successfully freed virtual address!\n");
 
     while (1) {
         message[0] = '0' + i;

@@ -4,6 +4,7 @@ set(COMPILE_OPTIONS
         -ffreestanding          # Not hosted
         -mcmodel=large
         -mno-red-zone           # Required for x86_64
+        -Os
 )
 
 add_library(drivers OBJECT

@@ -35,6 +35,10 @@ struct page_entry {
 // https://www.kernel.org/doc/html/v5.8/x86/x86_64/mm.html
 #define KERNEL_MAPPING_ADDRESS 0xFFFF8000UL << 32
 
+// Frees a virtual address and frees any pages associated if it has no entries
+bool free_address(uint64_t *pml4, uint64_t virtual_address);
+// Maps a physical address to a physical address with flags
 void map_page(uint64_t *pml4, uint64_t virtual_address,
               uint64_t physical_address, uint16_t flags);
+// Verifies that a virtual address has successfully been mapped to a physical address
 bool verify_mapping(uint64_t *pml4, uint64_t virtual_address);

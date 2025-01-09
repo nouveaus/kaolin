@@ -16,6 +16,11 @@ void ioapic_write_reg(void *ioapicaddr, uint32_t reg, uint32_t value) {
    ioapic[4] = value;
 }
 
+bool ioapic_map(uint64_t *pml4) {
+    map_page(pml4, IOAPIC_VIRTUAL_ADDRESS, IOAPICBASE, PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
+    return verify_mapping(pml4, IOAPIC_VIRTUAL_ADDRESS);
+}
+
 void ioapic_set_redirect(void *ioapicaddr, uint8_t irq, uint8_t vector, uint8_t apic_id) {
     // Redirects hardware interupts to local apic
     // Refer to Intel IA-32 Volume 3 12.6.1 Interrupt Command Register

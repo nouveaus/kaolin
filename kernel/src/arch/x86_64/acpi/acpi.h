@@ -79,11 +79,17 @@ uint8_t rsdp_get_revision(void);
 // Prints the signature of the rsdp
 void rsdp_print_signature(void);
 
+// Maps rsdt to a virtual memory address
+bool rsdt_map(uint64_t *pml4);
+
 // Verifies the rsdt
 bool rsdt_verify(void);
 
+// Maps the madt to a virtual memory address
+bool madt_map(uint64_t *pml4);
+
 // Finds the madt and sets the address
-bool madt_find(void);
+bool madt_find(uint64_t *pml4);
 
 // Verifies the madt
 bool madt_verify(void);

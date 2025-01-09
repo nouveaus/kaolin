@@ -1,9 +1,10 @@
 #include "acpi.h"
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "../../../io.h"
+#include "../memory/paging.h"
 
 #define BIOS_MEMORY_BEGIN 0x0E0000
 #define BIOS_MEMORY_END 0xFFFFF
@@ -25,8 +26,10 @@ static struct rsdp *rsdp = NULL;
 bool rsdp_find(void) {
     // Refer to 5.2.5.1 and 5.2.5.3 from ACPI Specification
     char *addr = (char *)BIOS_MEMORY_BEGIN;
-    for (; addr < (char *)BIOS_MEMORY_END && !cmp_signature(addr, RSDP_SIGNATURE); addr += 16);
-    rsdp = (struct rsdp*)addr;
+    for (;
+         addr < (char *)BIOS_MEMORY_END && !cmp_signature(addr, RSDP_SIGNATURE);
+         addr += 16);
+    rsdp = (struct rsdp *)addr;
     return addr < (char *)BIOS_MEMORY_END;
 }
 
@@ -37,6 +40,7 @@ void rsdp_print_signature(void) {
     putc('\n');
 }
 
+// No need to map rsdp I think cause its in bios (already mapped)
 bool rsdp_verify(void) {
     // Refer to 5.2.5.3 from ACPI Specification
     uint8_t *addr = (int8_t *)rsdp;
@@ -48,16 +52,19 @@ bool rsdp_verify(void) {
     return !sum;
 }
 
-uint8_t rsdp_get_revision(void) {
-    return rsdp->revision;
-}
+uint8_t rsdp_get_revision(void) { return rsdp->revision; }
 
-static struct rsdt *rsdt_get(void) {
-    return (struct rsdt *)rsdp->rsdt_address;
+static struct rsdt *rsdt_get(void) { return (struct rsdt *)(uint64_t)rsdp->rsdt_address; }
+
+bool rsdt_map(uint64_t *pml4) {
+    uint64_t address = (uint64_t)rsdp->rsdt_address;
+    map_page(pml4, KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
+    return verify_mapping(pml4, KERNEL_MAPPING_ADDRESS | address);
 }
 
 bool rsdt_verify(void) {
-    struct rsdt *rsdt = rsdt_get();
+    struct rsdt *rsdt =
+        (struct rsdt *)(KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
     uint8_t sum = 0;
     for (size_t i = 0; i < rsdt->length; i++) {
         sum += ((uint8_t *)rsdt)[i];
@@ -66,7 +73,8 @@ bool rsdt_verify(void) {
 }
 
 static size_t rsdt_get_entry_count(void) {
-    struct rsdt *rsdt = rsdt_get();
+    struct rsdt *rsdt =
+        (struct rsdt *)(KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
     return (rsdt->length - sizeof(struct rsdt)) / sizeof(uint32_t);
 }
 
@@ -74,22 +82,34 @@ static size_t rsdt_get_entry_count(void) {
 
 static struct madt *madt = NULL;
 
-bool madt_find(void) {
+bool madt_find(uint64_t *pml4) {
     size_t length = rsdt_get_entry_count();
-    struct rsdt *rsdt = rsdt_get();
+    struct rsdt *rsdt =
+        (struct rsdt *)(KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
+    
     for (size_t i = 0; i < length; i++) {
-        struct description_header *description_header = (struct description_header*)rsdt->entry[i];
+        map_page(pml4, KERNEL_MAPPING_ADDRESS | (uint64_t)rsdt->entry[i], (uint64_t)rsdt->entry[i], PAGE_PRESENT);        
+        // triple faults here
+        struct description_header *description_header =
+            (struct description_header *)(KERNEL_MAPPING_ADDRESS | (uint64_t)rsdt->entry[i]);
         if (cmp_signature(description_header->signature, MADT_SIGNATURE)) {
-            madt = (struct madt*)rsdt->entry[i];
+            madt = (struct madt *)(uint64_t)rsdt->entry[i];
             return true;
         }
     }
     return false;
 }
 
+bool madt_map(uint64_t *pml4) {
+    uint64_t address = (uint64_t)madt;
+    map_page(pml4, KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
+    madt = (struct madt *)(KERNEL_MAPPING_ADDRESS | address);
+    return verify_mapping(pml4, KERNEL_MAPPING_ADDRESS | address);
+}
+
 bool madt_verify(void) {
     uint8_t sum = 0;
-    uint8_t *addr = (uint8_t*)madt;
+    uint8_t *addr = (uint8_t *)madt;
     for (size_t i = 0; i < madt->length; i++) {
         sum += addr[i];
     }
@@ -104,8 +124,10 @@ static uint32_t ioapic_address = 0;
 
 size_t ioapic_get_entry_count(void) {
     // all entries are after madt
-    struct madt_entry *madt_entry = (struct madt_entry*)((uint8_t *)madt + sizeof(struct madt));
-    // madt->length is length of bytes to just add madt with length to get end address
+    struct madt_entry *madt_entry =
+        (struct madt_entry *)((uint8_t *)madt + sizeof(struct madt));
+    // madt->length is length of bytes to just add madt with length to get end
+    // address
     uint8_t *end = (uint8_t *)madt + madt->length;
     // they vary in different types tho
     size_t count = 0;
@@ -113,11 +135,14 @@ size_t ioapic_get_entry_count(void) {
     while ((uint8_t *)madt_entry < end) {
         if (madt_entry->type == 1) {
             // we cast it
-            struct madt_entry_apicio *madt_entry_apicio = (struct madt_entry_apicio*)madt_entry;
-            if (!ioapic_address) ioapic_address = madt_entry_apicio->ioapic_address;
+            struct madt_entry_apicio *madt_entry_apicio =
+                (struct madt_entry_apicio *)madt_entry;
+            if (!ioapic_address)
+                ioapic_address = madt_entry_apicio->ioapic_address;
             count++;
         }
-        madt_entry = (struct madt_entry*)((uint8_t*)madt_entry + madt_entry->length);
+        madt_entry =
+            (struct madt_entry *)((uint8_t *)madt_entry + madt_entry->length);
     }
     return count;
 }

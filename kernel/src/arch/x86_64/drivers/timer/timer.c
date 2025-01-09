@@ -8,8 +8,6 @@ uint32_t get_timer_ticks(void) {
     return timer_ticks;
 }
 
-void timer_handler(void) {
-    //asm volatile ("pusha\n");
+__attribute__((interrupt)) void timer_handler(struct interrupt_frame* frame) {
     send_apic_eoi();
-    asm volatile (/*"popa\n*/"leave\niretq");
 }

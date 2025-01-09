@@ -9,6 +9,9 @@ bool apic_is_supported(void);
 // Gets the local apic id
 int apic_get_id(void);
 
+/// Maps apic to virtual memory address
+bool map_apic(uint64_t *pml4);
+
 // Enables apic
 void enable_apic(void);
 

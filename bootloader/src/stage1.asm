@@ -25,7 +25,7 @@ boot_kernel:
 
 ; long mode is on from here onwards
 
-	mov	rbx,	.success_init_pm_msg
+	mov	rbx,	.success_init_lm_msg
 	call	print_vga
 
 ;	struct address_range_descriptor *address_ranges
@@ -34,16 +34,20 @@ boot_kernel:
 
 ;	uint32_t address_range_count
 	mov	rax, [mmap_buf]
-	push	rax 
+	push	rax
+
+;	void *paging_table
+	mov	rax, paging_table_buffer
+	push	rax
+
 ;	finally enter the kernel in 32-bit protected mode
-	hlt
 	call	[kernel_entry]
 
 	; we shouldn't have gotten here, disable interrupts and sleep
 	cli
 	hlt
 
-.success_init_pm_msg db "init_pm successful", 0
+.success_init_lm_msg db "init_lm successful", 0
 
 kernel_entry:
 	dq	0

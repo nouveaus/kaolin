@@ -5,6 +5,7 @@
 
 // Boot parameters, passed by the bootloader, or shim
 struct boot_parameters {
+    uint64_t *pml4;
     // Address range descriptors. This could have been collected through int 0x15, E820 in the PC BIOS
     uint32_t address_range_count;
     struct address_range_descriptor *address_ranges;

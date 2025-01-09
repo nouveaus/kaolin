@@ -3,8 +3,6 @@
 #include "arch/x86_64/cpu/cpuid.h"
 #include "arch/x86_64/cpu/msr.h"
 #include "arch/x86_64/cpu/idt.h"
-#include "arch/x86_64/cpu/long_mode.h"
-#include "arch/x86_64/cpu/gdt.h"
 #include "arch/x86_64/apic/lapic.h"
 #include "arch/x86_64/apic/ioapic.h"
 #include "arch/x86_64/acpi/acpi.h"
@@ -14,19 +12,16 @@
 #include "arch/x86_64/drivers/timer/timer.h"
 #include "io.h"
 
-static void read_acpi(void);
+#include <stdint.h>
+
+static void read_acpi(uint64_t *pml4);
 static void setup_idt(void);
 
 void _Noreturn _die(void) { while(1) asm volatile("cli\nhlt" ::); }
 
+// todo: move this to its own file later
 void exception_handler(void) {
-    //asm volatile ("pusha\n");
     puts("Fatal Error Occurred!");
-    _die();
-}
-
-void _Noreturn kernel_main_64() {
-    puts("entered long mode!!!");
     _die();
 }
 
@@ -35,9 +30,6 @@ void _Noreturn kernel_main_64() {
  */
 void _Noreturn kernel_main(struct boot_parameters parameters) {
     vga_initialize();
-    vga_putchar('a');
-    vga_putchar('b');
-
     uint32_t eax, ebx, ecx, edx;
     // get vendor string
     __cpuid(0, eax, ebx, ecx, edx);
@@ -53,44 +45,47 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
         _die();
     }
 
-    read_acpi();
+    read_acpi(parameters.pml4);
+    
+    if (!map_apic(parameters.pml4)) {
+        puts("Could not map apic to virtual memory!\n");
+        _die();
+    }
+    krintf("pml4 address: %x\n", parameters.pml4);
+    enable_apic();
+    puts("APIC ENABLED AND MAPPED\n");
 
-    puts("test");
-    _die();
-
-    if (!long_mode_is_supported()) {
-        puts("Long mode is not supported\n");
+    if (!ioapic_map(parameters.pml4)) {
+        puts("Could not map ioapic to virtual memory!\n");
         _die();
     }
     
-    setup_paging();
-    enable_long_mode();
-    enter_long_mode(kernel_main_64);
+    setup_idt();
+    puts("Successfully loaded idt\n");
     
-    // enable_apic();
-
-    // setup_idt();
-    
-    /*
     char message[] = "X Hello world!\n";
     unsigned int i = 0;
+
 
     while (1) {
         message[0] = '0' + i;
         i = (i + 1) % 10;
 
-        //vga_write_string(message);
-        krintf("%sThe number is: %d, float is: %f, ticks: %d, entry count: %d\n", message, 5, 3.9999, get_timer_ticks(), parameters.address_range_count);
+        // ! DONT USE FLOATS - THEY DONT WORK FOR SOME REASON
+
+        // fatal error occurs here
+        krintf("%sThe number is: %d, ticks: %d, entry count: %d\n", message, 5, get_timer_ticks(), parameters.address_range_count);
+        
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
         memmap_print_entries(parameters.address_range_count, parameters.address_ranges);
+        
         asm volatile ("int %0" : : "i"(0x80) : "memory");
-
+        
         ksleep(276447232);
     }
-    */
 }
 
-static void read_acpi(void) {
+static void read_acpi(uint64_t *pml4) {
     if (!rsdp_find()) {
         puts("Could not find RSDP\n");
         _die();
@@ -100,22 +95,30 @@ static void read_acpi(void) {
     rsdp_print_signature();
     krintf("RSDP revision: %d\n", rsdp_get_revision());
     if (!rsdp_verify()) {
-        krintf("Could not verify RSDP\n");
+        puts("Could not verify RSDP\n");
         _die();
     }
     puts("Verified RSDP\n");
-
+    if (!rsdt_map(pml4)) {
+        puts("Could not map rsdt!\n");
+        _die();
+    }
     if (!rsdt_verify()) {
         puts("Could not verify RSDT\n");
     }
     puts("Verified RSRT\n");
 
-    if (!madt_find()) {
+    // ! triple faults here
+    if (!madt_find(pml4)) {
         puts("Could not find MADT\n");
         _die();
     }
-
     puts("Found MADT\n");
+
+    if (!madt_map(pml4)) {
+        puts("Could not map madt!\n");
+        _die();
+    }
 
     if (!madt_verify()) {
         puts("Could not verify MADT\n");
@@ -135,19 +138,19 @@ static void setup_idt(void) {
     int apic_id = apic_get_id();
     krintf("APIC ID: %d\n", apic_id);
 
-    // system timer
-    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 0, 0x20, apic_id);
-    // keyboard
-    ioapic_set_redirect((uintptr_t*)IOAPICBASE, 1, 0x21, apic_id);
+    // system timer - probs not working
+    ioapic_set_redirect((uintptr_t*)IOAPIC_VIRTUAL_ADDRESS, 0, 0x20, apic_id);
+    // keyboard - not working
+    ioapic_set_redirect((uintptr_t*)IOAPIC_VIRTUAL_ADDRESS, 1, 0x21, apic_id);
 
     for (size_t vector = 0; vector < 32; vector++) {
-        setup_interrupt_gate(vector, exception_handler, INTERRUPT_32_GATE, 0);
+        setup_interrupt_gate(vector, exception_handler, INTERRUPT_64_GATE, 0, 0);
     }
 
     // we have interrupt after 31 since 0-31 are reserved for errors
-    setup_interrupt_gate(0x20, timer_handler, INTERRUPT_32_GATE, 0);
-    setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_32_GATE, 0);
-    setup_interrupt_gate(0x80, trap, TRAP_32_GATE, 0);
+    setup_interrupt_gate(0x20, timer_handler, INTERRUPT_64_GATE, 0, 0);
+    setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_64_GATE, 0, 0);
+    setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 0, 0);
 
     load_idt();
 }

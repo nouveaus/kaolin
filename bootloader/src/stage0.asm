@@ -39,23 +39,26 @@
 
 	call	enable_a20
 	call	detect_memory
-
-	mov	bx,	success_a20_msg
-	call	print
+	call	cpuid_avaliability
 
 	call	init_vga
 
-	call	switch_to_pm
+	mov	edi, paging_table_buffer
 
-	jmp	CODE_SEG:init_pm
+	call	switch_to_lm
+
+
+	; breaks here
+	jmp	CODE_SEG:boot_kernel
 
 success_stack_msg: db "Stack is initialised", 13, 10, 0
-success_a20_msg: db "a20 successful", 30, 10, 0
+success_a20_msg: db "A20 is initialised", 13, 10, 0
 
 ; Imports for sector 1
 
 %include "io.asm"
 %include "memdetect.asm"
+%include "cpuid.asm"
 
 times 510-($-$$) db 0
 dw 0xAA55

@@ -54,7 +54,7 @@ void putd(double f) {
     putc('0' + ((frac) % 10));
 }
 
-static void hex(uint32_t num) {
+static void hex(uint64_t num) {
     puts("0x");
 
     for (int i = sizeof(num) * 8 - 4; i >= 0; i -= 4) {
@@ -98,7 +98,7 @@ void krintf(const char *format, ...) {
                 break;
             }
             case 'x': {
-                uint32_t value = va_arg(args, uint32_t);
+                uint64_t value = va_arg(args, uint64_t);
                 hex(value);
                 break;
             }

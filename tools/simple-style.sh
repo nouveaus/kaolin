@@ -7,7 +7,7 @@ print_error() {
 
 exit_code=0
 
-whitespace_output=$(git grep -Pe '[ \t]$')
+whitespace_output=$(git grep -n -Pe '[ \t]$')
 if [[ -n "$whitespace_output" ]]; then
   print_error "detected files with trailing whitespace"
   echo "$whitespace_output"

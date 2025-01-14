@@ -1,4 +1,4 @@
-[bits 32]
+[bits 16]
 
 cpuid_avaliability:
 	; check if cpuid is even supported by the processor
@@ -23,5 +23,5 @@ cpuid_avaliability:
 	call	print_vga
 	jmp	$
 
-.cpuid_unavaliable_msg db "cpuid is not supported on this chipset", 0
+.cpuid_unavaliable_msg db "cpuid is not supported!", 0
 

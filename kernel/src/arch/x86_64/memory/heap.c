@@ -2,6 +2,8 @@
 
 #include "paging.h"
 
+#include <stdbool.h>
+
 #define HEAP_START 0x01000000
 
 // 8 byte aligned, needs to be <= 4096 bytes
@@ -10,14 +12,12 @@
 // arbitrary number
 #define HEAP_MAX_SIZE 0x10000000
 
-// 16 bytes - 8 byte aligned
 struct heap_block {
-    // size shall always be aligned to 8 bytes
-    // the 0 bit will dictate whether this block is free
     uint64_t size;
     struct heap_block *next;
     struct heap_block *back;
-} __attribute__((aligned(8)));
+    bool free;
+} __attribute__((aligned(16)));
 
 // Way it works:
 // heap_block | actual memory
@@ -46,9 +46,8 @@ static struct heap_block *allocate_free_block(struct heap_block *prev,
                                               struct heap_block *back) {
     struct heap_block *new =
         (struct heap_block *)((void *)prev + (prev == NULL) ? 0 : prev->size);
-    // assumes 8 byte alignment
-    // This size will be 8 byte aligned so its safe to use bit 0
-    new->size = (size - sizeof(struct heap_block)) | 0x1;
+    new->size = (size - sizeof(struct heap_block));
+    new->free = true;
     new->next = next;
     new->back = back;
     return new;
@@ -65,18 +64,19 @@ void heap_init(uint64_t *pml4) {
 
 // todo: move this into klib
 void *kmalloc(size_t size) {
-    // round up to nearest 8 divisible
-    size = (size + 7) & ~7;
+    // round up to nearest 16 divisible
+    size = (size + 15) & ~15;
 
     struct heap_block *before = NULL;
     struct heap_block *block = heap_start;
     struct heap_block *new;
     while (heap_start != NULL) {
         before = block;
-        if (block->size & 0x1 && size <= block->size) {
+        if (block->free && size <= block->size) {
             // adjust size
             size_t free_size = block->size - size;
             block->size = size;
+            block->free = false;
 
             // make new free block
             if (free_size) {
@@ -102,14 +102,14 @@ void free(void *address) {
     if (address == NULL) return;
     struct heap_block *block =
         (struct heap_block *)((uint8_t *)address + sizeof(struct heap_block));
-    block->size |= 0x1;
+    block->free = true;
 
-    if (block->next && block->next->size & 0x1) {
+    if (block->next && block->next->free) {
         block->size += block->next->size;
         block->next = block->next->next;
     }
 
-    if (block->back && block->back->size & 0x1) {
+    if (block->back && block->back->free) {
         block->back->size += block->size;
         block->back->next = block->next;
     }

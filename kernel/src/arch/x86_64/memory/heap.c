@@ -16,8 +16,8 @@ struct heap_block {
     // the 0 bit will dictate whether this block is free
     uint64_t size;
     struct heap_block *next;
-    // todo: check if attribute packed is neccessary
-} __attribute__((packed));
+    struct heap_block *back;
+} __attribute__((aligned(8)));
 
 // Way it works:
 // heap_block | actual memory
@@ -33,7 +33,8 @@ static void *heap_expand(size_t size);
 static void *get_heap_address(struct heap_block *block);
 static struct heap_block *allocate_free_block(struct heap_block *prev,
                                               size_t size,
-                                              struct heap_block *next);
+                                              struct heap_block *next,
+                                              struct heap_block *back);
 
 static void *get_heap_address(struct heap_block *block) {
     return (void *)(block + 1);
@@ -41,12 +42,15 @@ static void *get_heap_address(struct heap_block *block) {
 
 static struct heap_block *allocate_free_block(struct heap_block *prev,
                                               size_t size,
-                                              struct heap_block *next) {
-    struct heap_block *new = (struct heap_block *)((void *)prev + prev->size);
+                                              struct heap_block *next,
+                                              struct heap_block *back) {
+    struct heap_block *new =
+        (struct heap_block *)((void *)prev + (prev == NULL) ? 0 : prev->size);
     // assumes 8 byte alignment
     // This size will be 8 byte aligned so its safe to use bit 0
     new->size = (size - sizeof(struct heap_block)) | 0x1;
     new->next = next;
+    new->back = back;
     return new;
 }
 
@@ -54,7 +58,7 @@ void heap_init(uint64_t *pml4) {
     map_page(pml4, KERNEL_MAPPING_ADDRESS | HEAP_START, (uint64_t)HEAP_START,
              PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
     allocate_free_block((struct heap_block *)heap_start, HEAP_INITIAL_SIZE,
-                        NULL);
+                        NULL, NULL);
     // for expand heap
     pages_pml4 = pml4;
 }
@@ -76,7 +80,7 @@ void *kmalloc(size_t size) {
 
             // make new free block
             if (free_size) {
-                new = allocate_free_block(block, free_size, block->next);
+                new = allocate_free_block(block, free_size, block->next, block);
                 if (block == heap_end) heap_end = new;
                 block->size = new;
             }
@@ -88,7 +92,7 @@ void *kmalloc(size_t size) {
     // we need to allocate more pages
     void *new_address = heap_expand(size);
     if (new_address == NULL) return new_address;
-    new = allocate_free_block(new_address, size, NULL);
+    new = allocate_free_block(new_address, size, NULL, before);
     before->next = new;
     heap_end = (uint8_t *)heap_end + size + sizeof(struct heap_block) + 0xFFF;
     return new;
@@ -100,13 +104,14 @@ void free(void *address) {
         (struct heap_block *)((uint8_t *)address + sizeof(struct heap_block));
     block->size |= 0x1;
 
-    // merge free memory into one for all blocks
-    struct heap_block *current = heap_start;
-    while (current != NULL) {
-        if (current->size & 0x1 && current->next && current->next->size & 0x1) {
-            current->size += current->next->size;
-            current->next = current->next->next;
-        }
+    if (block->next && block->next->size & 0x1) {
+        block->size += block->next->size;
+        block->next = block->next->next;
+    }
+
+    if (block->back && block->back->size & 0x1) {
+        block->back->size += block->size;
+        block->back->next = block->next;
     }
 }
 

@@ -1,12 +1,13 @@
 #include "heap.h"
 
-#include "paging.h"
-
 #include <stdbool.h>
+
+#include "../../../io.h"
+#include "paging.h"
 
 #define HEAP_START 0x01000000
 
-// 8 byte aligned, needs to be <= 4096 bytes
+// needs to be <= 4096 bytes
 #define HEAP_INITIAL_SIZE 0x01000
 
 // arbitrary number
@@ -31,8 +32,7 @@ static uint64_t *pages_pml4;
 
 static void *heap_expand(size_t size);
 static void *get_heap_address(struct heap_block *block);
-static struct heap_block *allocate_free_block(struct heap_block *prev,
-                                              size_t size,
+static struct heap_block *allocate_free_block(void *base, size_t size,
                                               struct heap_block *next,
                                               struct heap_block *back);
 
@@ -40,12 +40,10 @@ static void *get_heap_address(struct heap_block *block) {
     return (void *)(block + 1);
 }
 
-static struct heap_block *allocate_free_block(struct heap_block *prev,
-                                              size_t size,
+static struct heap_block *allocate_free_block(void *base, size_t size,
                                               struct heap_block *next,
                                               struct heap_block *back) {
-    struct heap_block *new =
-        (struct heap_block *)((void *)prev + (prev == NULL) ? 0 : prev->size);
+    struct heap_block *new = (struct heap_block *)(base);
     new->size = (size - sizeof(struct heap_block));
     new->free = true;
     new->next = next;
@@ -56,9 +54,11 @@ static struct heap_block *allocate_free_block(struct heap_block *prev,
 void heap_init(uint64_t *pml4) {
     map_page(pml4, KERNEL_MAPPING_ADDRESS | HEAP_START, (uint64_t)HEAP_START,
              PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
-    allocate_free_block((struct heap_block *)heap_start, HEAP_INITIAL_SIZE,
-                        NULL, NULL);
-    // for expand heap
+    //krintf("v: %d\n",
+    //       verify_mapping(pml4, KERNEL_MAPPING_ADDRESS | HEAP_START));
+     allocate_free_block(heap_start, HEAP_INITIAL_SIZE,
+                         NULL, NULL);
+    //  for expand heap
     pages_pml4 = pml4;
 }
 
@@ -70,8 +70,7 @@ void *kmalloc(size_t size) {
     struct heap_block *before = NULL;
     struct heap_block *block = heap_start;
     struct heap_block *new;
-    while (heap_start != NULL) {
-        before = block;
+    while (block != NULL) {
         if (block->free && size <= block->size) {
             // adjust size
             size_t free_size = block->size - size;
@@ -79,29 +78,32 @@ void *kmalloc(size_t size) {
             block->free = false;
 
             // make new free block
-            if (free_size) {
-                new = allocate_free_block(block, free_size, block->next, block);
+            if (free_size > sizeof(struct heap_block)) {
+                new = allocate_free_block(
+                    (uint8_t *)block + sizeof(struct heap_block) + size, free_size,
+                    block->next, block);
                 if (block == heap_end) heap_end = new;
-                block->size = new;
+                block->next = new;
             }
             return get_heap_address(block);
         }
+        before = block;
         block = block->next;
     }
 
     // we need to allocate more pages
-    void *new_address = heap_expand(size);
+    void *new_address = heap_expand(size + sizeof(struct heap_block));
     if (new_address == NULL) return new_address;
     new = allocate_free_block(new_address, size, NULL, before);
     before->next = new;
-    heap_end = (uint8_t *)heap_end + size + sizeof(struct heap_block) + 0xFFF;
-    return new;
+    
+    return get_heap_address(new);
 }
 
 void free(void *address) {
     if (address == NULL) return;
     struct heap_block *block =
-        (struct heap_block *)((uint8_t *)address + sizeof(struct heap_block));
+        (struct heap_block *)((uint8_t *)address - sizeof(struct heap_block));
     block->free = true;
 
     if (block->next && block->next->free) {
@@ -116,13 +118,14 @@ void free(void *address) {
 }
 
 static void *heap_expand(size_t size) {
-    if ((uint8_t *)heap_end + size > (KERNEL_MAPPING_ADDRESS | HEAP_MAX_SIZE)) {
+    if ((uint8_t *)heap_end + size >
+        (uint8_t *)(KERNEL_MAPPING_ADDRESS | HEAP_MAX_SIZE)) {
         return NULL;
     }
 
     // divide by 0x1000 for 4096 bytes (each page takes up that)
     // add by 0xFFF to ensure 4096 alignment
-    size_t pages_required = (size + sizeof(struct heap_block) + 0xFFF) / 0x1000;
+    size_t pages_required = (size + 0xFFF) / 0x1000;
     void *block_start = heap_end;
     for (size_t i = 0; i < pages_required; i++) {
         // xor to get the physical address
@@ -132,5 +135,5 @@ static void *heap_expand(size_t size) {
         heap_end = (uint8_t *)heap_end + 0x1000;
     }
 
-    return heap_start;
+    return block_start;
 }

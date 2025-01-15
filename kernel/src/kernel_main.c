@@ -9,6 +9,7 @@
 #include "arch/x86_64/serial/serial.h"
 #include "arch/x86_64/klib/klib.h"
 #include "arch/x86_64/memory/paging.h"
+#include "arch/x86_64/memory/heap.h"
 #include "arch/x86_64/drivers/keyboard/keyboard.h"
 #include "arch/x86_64/drivers/timer/timer.h"
 #include "io.h"
@@ -35,6 +36,21 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     // get vendor string
     __cpuid(0, eax, ebx, ecx, edx);
     print_vendor(ebx, ecx, edx);
+
+    heap_init(parameters.pml4);
+
+    int *test = kmalloc(sizeof(int));
+    *test = 2;
+    krintf("test: %d\n", *test);
+    int *test2 = kmalloc(sizeof(int) * 4096);
+    puts("test 2\n");
+    for (size_t i = 0; i < 4096; i++) {
+        test2[i] = i;
+       krintf("%d, ", test2[i]);
+    }
+    putc('\n');
+    free(test);
+    free(test2);    
 
     if (!apic_is_supported()) {
         puts("APIC not supported\n");

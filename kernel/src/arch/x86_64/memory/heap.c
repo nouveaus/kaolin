@@ -96,7 +96,7 @@ void *kmalloc(size_t size) {
     if (new_address == NULL) return new_address;
     new = allocate_free_block(new_address, size, NULL, before);
     before->next = new;
-    
+
     return get_heap_address(new);
 }
 

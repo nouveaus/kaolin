@@ -50,7 +50,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     }
     putc('\n');
     free(test);
-    free(test2);    
+    free(test2);
 
     if (!apic_is_supported()) {
         puts("APIC not supported\n");

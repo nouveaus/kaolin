@@ -87,7 +87,6 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
 
         // ! DONT USE FLOATS - THEY DONT WORK FOR SOME REASON
 
-        // fatal error occurs here
         krintf("%sThe number is: %d, ticks: %d, entry count: %d\n", message, 5, get_timer_ticks(), parameters.address_range_count);
 
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
@@ -122,7 +121,6 @@ static void read_acpi(uint64_t *pml4) {
     }
     puts("Verified RSRT\n");
 
-    // ! triple faults here
     if (!madt_find(pml4)) {
         puts("Could not find MADT\n");
         _die();
@@ -152,9 +150,9 @@ static void setup_idt(void) {
     int apic_id = apic_get_id();
     krintf("APIC ID: %d\n", apic_id);
 
-    // system timer - probs not working
+    // system timer
     ioapic_set_redirect((uintptr_t*)IOAPIC_VIRTUAL_ADDRESS, 0, 0x20, apic_id);
-    // keyboard - not working
+    // keyboard
     ioapic_set_redirect((uintptr_t*)IOAPIC_VIRTUAL_ADDRESS, 1, 0x21, apic_id);
 
     for (size_t vector = 0; vector < 32; vector++) {

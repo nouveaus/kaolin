@@ -98,7 +98,7 @@ bool madt_verify(void);
 uint32_t madt_get_lapic_address(void);
 
 // Gets the count of ioapic and gets the address of the first ioapic
-size_t ioapic_get_entry_count(void);
+size_t ioapic_count_entries(void);
 
-// Returns the first ioapic address
-uint32_t get_first_ioapic_address(void);
+// Returns a array of addresses to madts
+struct madt_entry **get_madt_entries(void);

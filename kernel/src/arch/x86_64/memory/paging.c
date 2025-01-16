@@ -164,3 +164,22 @@ bool verify_mapping(uint64_t *pml4, uint64_t virtual_address) {
 
     return true;
 }
+
+void *mmap(uint64_t *pml4, void *address, size_t size, void **end_address) {
+    // divide by 0x1000 for 4096 bytes (each page takes up that)
+    // add by 0xFFF to ensure 4096 alignment
+    size_t pages_required = (size + 0xFFF) / 0x1000;
+    void *block_start = address;
+    for (size_t i = 0; i < pages_required; i++) {
+        // xor to get the physical address
+        map_page(pml4, KERNEL_MAPPING_ADDRESS | (uint64_t)address,
+                 (uint64_t)address,
+                 PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
+        address = (uint8_t *)address + 0x1000;
+    }
+
+    if (end_address != NULL)
+        *end_address = address;
+
+    return (void*)(KERNEL_MAPPING_ADDRESS | (uint64_t)block_start);
+}

@@ -42,3 +42,5 @@ void map_page(uint64_t *pml4, uint64_t virtual_address,
               uint64_t physical_address, uint16_t flags);
 // Verifies that a virtual address has successfully been mapped to a physical address
 bool verify_mapping(uint64_t *pml4, uint64_t virtual_address);
+
+void *mmap(uint64_t *pml4, void *address, size_t size, void **end_address);

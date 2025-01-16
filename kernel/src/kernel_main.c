@@ -11,7 +11,6 @@
 #include "arch/x86_64/drivers/keyboard/keyboard.h"
 #include "arch/x86_64/drivers/timer/timer.h"
 #include "arch/x86_64/klib/klib.h"
-#include "arch/x86_64/memory/heap.h"
 #include "arch/x86_64/memory/paging.h"
 #include "arch/x86_64/serial/serial.h"
 #include "arch/x86_64/vga/vga.h"

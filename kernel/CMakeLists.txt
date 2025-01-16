@@ -28,8 +28,8 @@ add_executable(kernel
         src/arch/x86_64/io/io.c
         src/arch/x86_64/memory/memmap.c
         src/arch/x86_64/memory/paging.c
-        src/arch/x86_64/memory/heap.c
         src/arch/x86_64/klib/klib.c
+        src/arch/x86_64/klib/malloc.c
         src/arch/x86_64/serial/serial.c
         src/arch/x86_64/vga/vga.c
         src/kernel_main.c

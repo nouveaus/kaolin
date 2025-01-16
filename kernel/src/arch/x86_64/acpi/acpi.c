@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 #include "../../../io.h"
-#include "../memory/heap.h"
+#include "../klib/klib.h"
 #include "../memory/paging.h"
 
 #define BIOS_MEMORY_BEGIN 0x0E0000

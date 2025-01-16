@@ -171,7 +171,6 @@ void *mmap(uint64_t *pml4, void *address, size_t size, void **end_address) {
     size_t pages_required = (size + 0xFFF) / 0x1000;
     void *block_start = address;
     for (size_t i = 0; i < pages_required; i++) {
-        // xor to get the physical address
         map_page(pml4, KERNEL_MAPPING_ADDRESS | (uint64_t)address,
                  (uint64_t)address,
                  PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);

@@ -56,7 +56,6 @@ void heap_init(uint64_t *pml4) {
     pages_pml4 = pml4;
 }
 
-// todo: move this into klib
 void *kmalloc(size_t size) {
     size = (size + sizeof(size_t) - 1) & ~(sizeof(size_t) - 1);
 
@@ -91,7 +90,6 @@ void *kmalloc(size_t size) {
         return NULL;
     }
 
-    // ! dont forget to xor the memory address when using mmap
     void *new_address =
         mmap(pages_pml4, (void *)(KERNEL_MAPPING_ADDRESS ^ (uint64_t)heap_end),
              size + sizeof(struct heap_block), &heap_end);

@@ -16,7 +16,7 @@
 #include "arch/x86_64/vga/vga.h"
 #include "io.h"
 
-static void read_acpi(uint64_t *pml4);
+static void read_acpi(void);
 static void setup_idt(void);
 
 void _Noreturn _die(void) {
@@ -40,7 +40,9 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     __cpuid(0, eax, ebx, ecx, edx);
     print_vendor(ebx, ecx, edx);
 
-    heap_init(parameters.pml4);
+    paging_init(parameters.pml4);
+
+    heap_init();
 
     int *test = kmalloc(sizeof(int));
     *test = 2;
@@ -65,9 +67,9 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
         _die();
     }
 
-    read_acpi(parameters.pml4);
+    read_acpi();
 
-    if (!map_apic(parameters.pml4)) {
+    if (!map_apic()) {
         puts("Could not map apic to virtual memory!\n");
         _die();
     }
@@ -75,7 +77,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     enable_apic();
     puts("APIC ENABLED AND MAPPED\n");
 
-    if (!ioapic_map(parameters.pml4)) {
+    if (!ioapic_map()) {
         puts("Could not map ioapic to virtual memory!\n");
         _die();
     }
@@ -87,13 +89,13 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     unsigned int i = 0;
 
     uint64_t test_virtual_address = (KERNEL_MAPPING_ADDRESS | 0xFFFFFFF);
-    map_page(parameters.pml4, test_virtual_address, 0xFFFFFFF, PAGE_PRESENT);
-    if (!verify_mapping(parameters.pml4, test_virtual_address)) {
+    map_page(test_virtual_address, 0xFFFFFFF, PAGE_PRESENT);
+    if (!verify_mapping(test_virtual_address)) {
         puts("Could not page correctly!\n");
         _die();
     }
-    free_address(parameters.pml4, test_virtual_address);
-    if (verify_mapping(parameters.pml4, test_virtual_address)) {
+    free_address(test_virtual_address);
+    if (verify_mapping(test_virtual_address)) {
         puts("Could not free virtual address correctly!\n");
         _die();
     }
@@ -119,7 +121,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     }
 }
 
-static void read_acpi(uint64_t *pml4) {
+static void read_acpi(void) {
     if (!rsdp_find()) {
         puts("Could not find RSDP\n");
         _die();
@@ -133,7 +135,7 @@ static void read_acpi(uint64_t *pml4) {
         _die();
     }
     puts("Verified RSDP\n");
-    if (!rsdt_map(pml4)) {
+    if (!rsdt_map()) {
         puts("Could not map rsdt!\n");
         _die();
     }
@@ -142,13 +144,13 @@ static void read_acpi(uint64_t *pml4) {
     }
     puts("Verified RSRT\n");
 
-    if (!madt_find(pml4)) {
+    if (!madt_find()) {
         puts("Could not find MADT\n");
         _die();
     }
     puts("Found MADT\n");
 
-    if (!madt_map(pml4)) {
+    if (!madt_map()) {
         puts("Could not map madt!\n");
         _die();
     }

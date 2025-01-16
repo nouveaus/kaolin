@@ -26,7 +26,6 @@ struct heap_block {
 static void *heap_start = (void *)(KERNEL_MAPPING_ADDRESS | HEAP_START);
 static void *heap_end =
     (void *)((KERNEL_MAPPING_ADDRESS | HEAP_START) + HEAP_INITIAL_SIZE);
-static uint64_t *pages_pml4;
 
 static void *get_heap_address(struct heap_block *block);
 static struct heap_block *allocate_free_block(void *base, size_t size,
@@ -48,12 +47,11 @@ static struct heap_block *allocate_free_block(void *base, size_t size,
     return new;
 }
 
-void heap_init(uint64_t *pml4) {
-    map_page(pml4, KERNEL_MAPPING_ADDRESS | HEAP_START, (uint64_t)HEAP_START,
+void heap_init(void) {
+    map_page(KERNEL_MAPPING_ADDRESS | HEAP_START, (uint64_t)HEAP_START,
              PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
     allocate_free_block(heap_start, HEAP_INITIAL_SIZE, NULL, NULL);
     //  for expand heap
-    pages_pml4 = pml4;
 }
 
 void *kmalloc(size_t size) {
@@ -91,7 +89,7 @@ void *kmalloc(size_t size) {
     }
 
     void *new_address =
-        mmap(pages_pml4, (void *)(KERNEL_MAPPING_ADDRESS ^ (uint64_t)heap_end),
+        mmap((void *)(KERNEL_MAPPING_ADDRESS ^ (uint64_t)heap_end),
              size + sizeof(struct heap_block), &heap_end);
     new = allocate_free_block(new_address, size, NULL, before);
     before->next = new;

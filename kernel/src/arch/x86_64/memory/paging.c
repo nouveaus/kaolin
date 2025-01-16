@@ -6,6 +6,8 @@
 #define PHYSICAL_MEMORY_START 0x00100000
 #define MAX_PAGE_ENTRIES 512
 
+static uint64_t *pml4;
+
 // Inspired by https://wiki.osdev.org/Page_Frame_Allocation (bitmap)
 // this keeps track of what page is being used
 static uint8_t bitmap[MAX_PAGES / 8] = {0};
@@ -52,7 +54,9 @@ static void invalidate_tlb(uint64_t virtual_address) {
     asm volatile("invlpg (%0)" ::"r"(virtual_address) : "memory");
 }
 
-bool free_address(uint64_t *pml4, uint64_t virtual_address) {
+void paging_init(uint64_t *pml4_address) { pml4 = pml4_address; }
+
+bool free_address(uint64_t virtual_address) {
     uint16_t pml4_offset = (virtual_address >> 39) & 0x1FF;
     uint16_t pdpt_offset = (virtual_address >> 30) & 0x1FF;
     uint16_t pd_offset = (virtual_address >> 21) & 0x1FF;
@@ -84,8 +88,8 @@ bool free_address(uint64_t *pml4, uint64_t virtual_address) {
 // ! IMPORTANT PHYSICAL ADDRESS MUST BE 4096 ALIGNED
 // ! (well, not actually that important since this code clears the lower 12 bits
 // anyways...) ! make sure flags include PAGE_PRESENT
-void map_page(uint64_t *pml4, uint64_t virtual_address,
-              uint64_t physical_address, uint16_t flags) {
+void map_page(uint64_t virtual_address, uint64_t physical_address,
+              uint16_t flags) {
     // each offset is 9 bits
     uint16_t pml4_offset = (virtual_address >> 39) & 0x1FF;
     uint16_t pdpt_offset = (virtual_address >> 30) & 0x1FF;
@@ -132,7 +136,7 @@ void map_page(uint64_t *pml4, uint64_t virtual_address,
     invalidate_tlb(virtual_address);
 }
 
-bool verify_mapping(uint64_t *pml4, uint64_t virtual_address) {
+bool verify_mapping(uint64_t virtual_address) {
     uint16_t pml4_offset = (virtual_address >> 39) & 0x1FF;
     uint16_t pdpt_offset = (virtual_address >> 30) & 0x1FF;
     uint16_t pd_offset = (virtual_address >> 21) & 0x1FF;
@@ -165,20 +169,18 @@ bool verify_mapping(uint64_t *pml4, uint64_t virtual_address) {
     return true;
 }
 
-void *mmap(uint64_t *pml4, void *address, size_t size, void **end_address) {
+void *mmap(void *address, size_t size, void **end_address) {
     // divide by 0x1000 for 4096 bytes (each page takes up that)
     // add by 0xFFF to ensure 4096 alignment
     size_t pages_required = (size + 0xFFF) / 0x1000;
     void *block_start = address;
     for (size_t i = 0; i < pages_required; i++) {
-        map_page(pml4, KERNEL_MAPPING_ADDRESS | (uint64_t)address,
-                 (uint64_t)address,
+        map_page(KERNEL_MAPPING_ADDRESS | (uint64_t)address, (uint64_t)address,
                  PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
         address = (uint8_t *)address + 0x1000;
     }
 
-    if (end_address != NULL)
-        *end_address = address;
+    if (end_address != NULL) *end_address = address;
 
-    return (void*)(KERNEL_MAPPING_ADDRESS | (uint64_t)block_start);
+    return (void *)(KERNEL_MAPPING_ADDRESS | (uint64_t)block_start);
 }

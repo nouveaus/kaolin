@@ -59,10 +59,10 @@ static struct rsdt *rsdt_get(void) {
     return (struct rsdt *)(uint64_t)rsdp->rsdt_address;
 }
 
-bool rsdt_map(uint64_t *pml4) {
+bool rsdt_map(void) {
     uint64_t address = (uint64_t)rsdp->rsdt_address;
-    map_page(pml4, KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
-    return verify_mapping(pml4, KERNEL_MAPPING_ADDRESS | address);
+    map_page(KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
+    return verify_mapping(KERNEL_MAPPING_ADDRESS | address);
 }
 
 bool rsdt_verify(void) {
@@ -85,13 +85,13 @@ static size_t rsdt_get_entry_count(void) {
 
 static struct madt *madt = NULL;
 
-bool madt_find(uint64_t *pml4) {
+bool madt_find(void) {
     size_t length = rsdt_get_entry_count();
     struct rsdt *rsdt =
         (struct rsdt *)(KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
 
     for (size_t i = 0; i < length; i++) {
-        map_page(pml4, KERNEL_MAPPING_ADDRESS | (uint64_t)rsdt->entry[i],
+        map_page(KERNEL_MAPPING_ADDRESS | (uint64_t)rsdt->entry[i],
                  (uint64_t)rsdt->entry[i], PAGE_PRESENT);
 
         struct description_header *description_header =
@@ -105,11 +105,11 @@ bool madt_find(uint64_t *pml4) {
     return false;
 }
 
-bool madt_map(uint64_t *pml4) {
+bool madt_map(void) {
     uint64_t address = (uint64_t)madt;
-    map_page(pml4, KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
+    map_page(KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
     madt = (struct madt *)(KERNEL_MAPPING_ADDRESS | address);
-    return verify_mapping(pml4, KERNEL_MAPPING_ADDRESS | address);
+    return verify_mapping(KERNEL_MAPPING_ADDRESS | address);
 }
 
 bool madt_verify(void) {

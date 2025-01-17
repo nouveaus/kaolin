@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Download packages
         run: |
-          sudo apt-get install nasm
+          sudo apt-get install nasm qemu-system-x86
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Compile

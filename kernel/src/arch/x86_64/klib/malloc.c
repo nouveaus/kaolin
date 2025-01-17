@@ -23,9 +23,9 @@ struct heap_block {
 // We allocate a extra 16 bytes for this metadata
 // We always return the memory address 16 bytes after
 
-static void *heap_start = (void *)(KERNEL_MAPPING_ADDRESS | HEAP_START);
+static void *heap_start = (void *) (KERNEL_MAPPING_ADDRESS | HEAP_START);
 static void *heap_end =
-    (void *)((KERNEL_MAPPING_ADDRESS | HEAP_START) + HEAP_INITIAL_SIZE);
+        (void *) ((KERNEL_MAPPING_ADDRESS | HEAP_START) + HEAP_INITIAL_SIZE);
 
 static void *get_heap_address(struct heap_block *block);
 static struct heap_block *allocate_free_block(void *base, size_t size,
@@ -33,13 +33,13 @@ static struct heap_block *allocate_free_block(void *base, size_t size,
                                               struct heap_block *back);
 
 static void *get_heap_address(struct heap_block *block) {
-    return (void *)(block + 1);
+    return (void *) (block + 1);
 }
 
 static struct heap_block *allocate_free_block(void *base, size_t size,
                                               struct heap_block *next,
                                               struct heap_block *back) {
-    struct heap_block *new = (struct heap_block *)(base);
+    struct heap_block *new = (struct heap_block *) (base);
     new->size = (size - sizeof(struct heap_block));
     new->free = true;
     new->next = next;
@@ -48,7 +48,7 @@ static struct heap_block *allocate_free_block(void *base, size_t size,
 }
 
 void heap_init(void) {
-    map_page(KERNEL_MAPPING_ADDRESS | HEAP_START, (uint64_t)HEAP_START,
+    map_page(KERNEL_MAPPING_ADDRESS | HEAP_START, (uint64_t) HEAP_START,
              PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
     allocate_free_block(heap_start, HEAP_INITIAL_SIZE, NULL, NULL);
     //  for expand heap
@@ -70,8 +70,8 @@ void *kmalloc(size_t size) {
             // make new free block
             if (free_size > sizeof(struct heap_block)) {
                 new = allocate_free_block(
-                    (uint8_t *)block + sizeof(struct heap_block) + size,
-                    free_size, block->next, block);
+                        (uint8_t *) block + sizeof(struct heap_block) + size,
+                        free_size, block->next, block);
                 if (block == heap_end) heap_end = new;
                 block->next = new;
             }
@@ -83,14 +83,14 @@ void *kmalloc(size_t size) {
 
     // we need to allocate more pages
 
-    if ((uint8_t *)heap_end + size + sizeof(struct heap_block) >
-        (uint8_t *)(KERNEL_MAPPING_ADDRESS | HEAP_MAX_SIZE)) {
+    if ((uint8_t *) heap_end + size + sizeof(struct heap_block) >
+        (uint8_t *) (KERNEL_MAPPING_ADDRESS | HEAP_MAX_SIZE)) {
         return NULL;
     }
 
     void *new_address =
-        mmap((void *)(KERNEL_MAPPING_ADDRESS ^ (uint64_t)heap_end),
-             size + sizeof(struct heap_block), &heap_end);
+            mmap((void *) (KERNEL_MAPPING_ADDRESS ^ (uint64_t) heap_end),
+                 size + sizeof(struct heap_block), &heap_end);
     new = allocate_free_block(new_address, size, NULL, before);
     before->next = new;
 
@@ -100,7 +100,7 @@ void *kmalloc(size_t size) {
 void free(void *address) {
     if (address == NULL) return;
     struct heap_block *block =
-        (struct heap_block *)((uint8_t *)address - sizeof(struct heap_block));
+            (struct heap_block *) ((uint8_t *) address - sizeof(struct heap_block));
     block->free = true;
 
     if (block->next && block->next->free) {

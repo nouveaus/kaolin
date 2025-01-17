@@ -1,9 +1,9 @@
 #pragma once
 
-#include <stdint.h>
 #include "../memory/paging.h"
+#include <stdint.h>
 
-#define IOAPICBASE 0xFEC00000
+#define IOAPICBASE             0xFEC00000
 #define IOAPIC_VIRTUAL_ADDRESS (KERNEL_MAPPING_ADDRESS | IOAPICBASE)
 
 // Reads register from ioapic

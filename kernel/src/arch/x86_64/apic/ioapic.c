@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 uint32_t ioapic_read_reg(void *ioapicaddr, uint32_t reg) {
-    uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
+    uint32_t volatile *ioapic = (uint32_t volatile *) ioapicaddr;
     ioapic[0] = reg;
 
     // window of ioapic
@@ -11,9 +11,9 @@ uint32_t ioapic_read_reg(void *ioapicaddr, uint32_t reg) {
 }
 
 void ioapic_write_reg(void *ioapicaddr, uint32_t reg, uint32_t value) {
-   uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
-   ioapic[0] = reg;
-   ioapic[4] = value;
+    uint32_t volatile *ioapic = (uint32_t volatile *) ioapicaddr;
+    ioapic[0] = reg;
+    ioapic[4] = value;
 }
 
 bool ioapic_map(void) {

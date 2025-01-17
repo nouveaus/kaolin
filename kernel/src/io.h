@@ -19,4 +19,4 @@ void putd(double f);
  * %d - integer
  * %f - double
  */
-void krintf(const char *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
+void krintf(const char *format, ...) __attribute__((__format__(__printf__, 1, 2)));

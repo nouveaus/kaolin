@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 // Checks whether the cpu supports msr
 bool cpu_has_msr(void);

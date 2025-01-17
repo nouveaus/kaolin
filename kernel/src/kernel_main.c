@@ -31,7 +31,7 @@ void exception_handler(void) {
 }
 
 void _Noreturn user_main(void) {
-    while (1) puts("Hello, world!\n");
+    while(1) krintf("sigma balls!\n");
 }
 
 /*
@@ -107,7 +107,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
 
     puts("Successfully freed virtual address!\n");
 
-    for (size_t i = 0; i < 2; i++) {
+    for (size_t i = 0; i < 1; i++) {
         message[0] = '0' + i;
         i = (i + 1) % 10;
 

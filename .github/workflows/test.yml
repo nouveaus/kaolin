@@ -28,7 +28,6 @@ jobs:
             -nographic \
             -cpu qemu64 \
             -drive file=build/os.img,format=raw \
-            -serial stdio \
             -device isa-debug-exit,iobase=0xf4,iosize=0x04 && exit 33
           exit_code=$?
           if [[ $exit_code -eq 31 ]]; then

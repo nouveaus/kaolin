@@ -39,6 +39,7 @@ void _Noreturn user_main(void) {
  * mode.
  */
 void _Noreturn kernel_main(struct boot_parameters parameters) {
+    enable_serial_output();
     vga_initialize();
     uint32_t eax, ebx, ecx, edx;
     // get vendor string

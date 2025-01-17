@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define VGA_WIDTH 80
+#define VGA_WIDTH  80
 #define VGA_HEIGHT 25
 
 static volatile uint16_t *const VGA_BUFFER = (volatile uint16_t *) 0xB8000;

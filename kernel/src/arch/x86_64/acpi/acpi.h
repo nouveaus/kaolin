@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 // Refer to 5.2.5.3 of ACPI Spec
 struct rsdp {
@@ -49,7 +49,7 @@ struct madt {
 } __attribute__((packed));
 
 #define MADT_ENTRY \
-    uint8_t type; \
+    uint8_t type;  \
     uint8_t length;
 
 // generalised struct

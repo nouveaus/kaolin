@@ -170,7 +170,7 @@ static void read_acpi(void) {
         struct madt_entry *entry = madt_entries[i];
         if (entry->type == 1) {
             struct madt_entry_apicio *apicio_entry =
-                (struct madt_entry_apicio *)entry;
+                    (struct madt_entry_apicio *) entry;
             krintf("APICIO id: %d\n", apicio_entry->ioapic_id);
             krintf("APICIO address: %x\n", apicio_entry->ioapic_address);
         }
@@ -182,9 +182,9 @@ static void setup_idt(void) {
     krintf("APIC ID: %d\n", apic_id);
 
     // system timer
-    ioapic_set_redirect((uintptr_t *)IOAPIC_VIRTUAL_ADDRESS, 0, 0x20, apic_id);
+    ioapic_set_redirect((uintptr_t *) IOAPIC_VIRTUAL_ADDRESS, 0, 0x20, apic_id);
     // keyboard
-    ioapic_set_redirect((uintptr_t *)IOAPIC_VIRTUAL_ADDRESS, 1, 0x21, apic_id);
+    ioapic_set_redirect((uintptr_t *) IOAPIC_VIRTUAL_ADDRESS, 1, 0x21, apic_id);
 
     for (size_t vector = 0; vector < 32; vector++) {
         setup_interrupt_gate(vector, exception_handler, INTERRUPT_64_GATE, 0,

@@ -87,7 +87,7 @@ void krintf(const char *format, ...) {
                 puts(value);
                 break;
             }
-            case 'd' : {
+            case 'd': {
                 int value = va_arg(args, int);
                 puti(value);
                 break;

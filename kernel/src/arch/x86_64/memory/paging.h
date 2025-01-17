@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 // all tables basically share
 // the same format entry
@@ -25,9 +25,9 @@ struct page_entry {
     uint64_t nx : 1;
 } __attribute__((packed));
 
-#define PAGE_PRESENT 0x1
-#define PAGE_WRITE   0x2
-#define PAGE_USER    0x4
+#define PAGE_PRESENT       0x1
+#define PAGE_WRITE         0x2
+#define PAGE_USER          0x4
 #define PAGE_CACHE_DISABLE 0x10
 
 // kernel uses the upper address for mmio stuff

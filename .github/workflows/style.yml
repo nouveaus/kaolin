@@ -4,10 +4,21 @@ on:
   - push
 
 jobs:
-  build:
+  style:
     runs-on: ubuntu-latest
     steps:
+      - name: Download packages
+        run: |
+          source /etc/os-release
+
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+          sudo add-apt-repository -y "deb http://apt.llvm.org/${UBUNTU_CODENAME}/  llvm-toolchain-${UBUNTU_CODENAME}-19 main"
+          sudo apt-get update
+
+          sudo apt-get install clang-format-19
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Check simple style
         run: ./tools/simple-style.sh
+      - name: Clang format
+        run: ./tools/clang-format.sh --dry-run --Werror

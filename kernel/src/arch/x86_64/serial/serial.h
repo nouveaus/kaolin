@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#define DATA_PORT 0x60
+#define DATA_PORT   0x60
 #define STATUS_PORT 0x64
 
 // Writes a byte to the serial port

@@ -1,10 +1,11 @@
 #pragma once
 
+#include <cpuid.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <cpuid.h>
 
 // Table taken from CPU Features: https://wiki.osdev.org/CPUID
+// clang-format off
 enum {
     CPUID_FEAT_ECX_SSE3         = 1 << 0,
     CPUID_FEAT_ECX_PCLMUL       = 1 << 1,
@@ -69,6 +70,7 @@ enum {
     CPUID_FEAT_EDX_IA64         = 1 << 30,
     CPUID_FEAT_EDX_PBE          = 1 << 31
 };
+// clang-format on
 
 // Prints the vendor string
 void print_vendor(unsigned int ebx, unsigned int ecx, unsigned int edx);

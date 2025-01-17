@@ -9,7 +9,7 @@ void ksleep(int ticks);
 struct interrupt_frame;
 
 // Trap gate
-void trap(struct interrupt_frame* frame);
+void trap(struct interrupt_frame *frame);
 
 // Initialises the heap by mapping it in virtual memory.
 void heap_init(void);

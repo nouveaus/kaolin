@@ -14,5 +14,5 @@ struct address_range_descriptor {
 
 // Prints all the entries of the memory map
 void memmap_print_entries(
-    uint32_t entry_count,
-    struct address_range_descriptor address_range_descriptor[]);
+        uint32_t entry_count,
+        struct address_range_descriptor address_range_descriptor[]);

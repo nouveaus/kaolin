@@ -6,7 +6,6 @@ on:
 jobs:
   style:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - name: Download packages
         run: |

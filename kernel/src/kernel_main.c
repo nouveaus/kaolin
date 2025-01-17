@@ -13,6 +13,7 @@
 #include "arch/x86_64/klib/klib.h"
 #include "arch/x86_64/memory/paging.h"
 #include "arch/x86_64/serial/serial.h"
+#include "arch/x86_64/usermode/usermode.h"
 #include "arch/x86_64/vga/vga.h"
 #include "io.h"
 
@@ -27,6 +28,10 @@ void _Noreturn _die(void) {
 void exception_handler(void) {
     puts("Fatal Error Occurred!");
     _die();
+}
+
+void _Noreturn user_main(void) {
+    while (1) puts("Hello, world!\n");
 }
 
 /*
@@ -86,7 +91,6 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     puts("Successfully loaded idt\n");
 
     char message[] = "X Hello world!\n";
-    unsigned int i = 0;
 
     uint64_t test_virtual_address = (KERNEL_MAPPING_ADDRESS | 0xFFFFFFF);
     map_page(test_virtual_address, 0xFFFFFFF, PAGE_PRESENT);
@@ -102,7 +106,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
 
     puts("Successfully freed virtual address!\n");
 
-    while (1) {
+    for (size_t i = 0; i < 2; i++) {
         message[0] = '0' + i;
         i = (i + 1) % 10;
 
@@ -112,13 +116,14 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
                get_timer_ticks(), parameters.address_range_count);
 
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
-        memmap_print_entries(parameters.address_range_count,
-                             parameters.address_ranges);
-
+        //memmap_print_entries(parameters.address_range_count,
+        //                     parameters.address_ranges);
+//
         asm volatile("int %0" : : "i"(0x80) : "memory");
 
         ksleep(276447232);
     }
+    enter_usermode((void *) user_main);
 }
 
 static void read_acpi(void) {

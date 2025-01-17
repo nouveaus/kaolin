@@ -31,6 +31,7 @@ add_executable(kernel
         src/arch/x86_64/klib/klib.c
         src/arch/x86_64/klib/malloc.c
         src/arch/x86_64/serial/serial.c
+        src/arch/x86_64/usermode/usermode.c
         src/arch/x86_64/vga/vga.c
         src/kernel_main.c
         src/io.c

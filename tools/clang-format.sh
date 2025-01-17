@@ -5,10 +5,6 @@ if ! command -v "${CLANG_FORMAT}" &>/dev/null; then
 fi
 
 if ! command -v "${CLANG_FORMAT}" &>/dev/null; then
-  CLANG_FORMAT=clang-format-18
-fi
-
-if ! command -v "${CLANG_FORMAT}" &>/dev/null; then
   CLANG_FORMAT=clang-format
 fi
 

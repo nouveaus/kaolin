@@ -80,16 +80,16 @@ uint8_t rsdp_get_revision(void);
 void rsdp_print_signature(void);
 
 // Maps rsdt to a virtual memory address
-bool rsdt_map(uint64_t *pml4);
+bool rsdt_map(void);
 
 // Verifies the rsdt
 bool rsdt_verify(void);
 
 // Maps the madt to a virtual memory address
-bool madt_map(uint64_t *pml4);
+bool madt_map(void);
 
 // Finds the madt and sets the address
-bool madt_find(uint64_t *pml4);
+bool madt_find(void);
 
 // Verifies the madt
 bool madt_verify(void);
@@ -98,7 +98,7 @@ bool madt_verify(void);
 uint32_t madt_get_lapic_address(void);
 
 // Gets the count of ioapic and gets the address of the first ioapic
-size_t ioapic_get_entry_count(void);
+size_t ioapic_count_entries(void);
 
-// Returns the first ioapic address
-uint32_t get_first_ioapic_address(void);
+// Returns a array of addresses to madts
+struct madt_entry **get_madt_entries(void);

@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 #include "../../../io.h"
+#include "../klib/klib.h"
 #include "../memory/paging.h"
 
 #define BIOS_MEMORY_BEGIN 0x0E0000
@@ -54,12 +55,14 @@ bool rsdp_verify(void) {
 
 uint8_t rsdp_get_revision(void) { return rsdp->revision; }
 
-static struct rsdt *rsdt_get(void) { return (struct rsdt *)(uint64_t)rsdp->rsdt_address; }
+static struct rsdt *rsdt_get(void) {
+    return (struct rsdt *)(uint64_t)rsdp->rsdt_address;
+}
 
-bool rsdt_map(uint64_t *pml4) {
+bool rsdt_map(void) {
     uint64_t address = (uint64_t)rsdp->rsdt_address;
-    map_page(pml4, KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
-    return verify_mapping(pml4, KERNEL_MAPPING_ADDRESS | address);
+    map_page(KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
+    return verify_mapping(KERNEL_MAPPING_ADDRESS | address);
 }
 
 bool rsdt_verify(void) {
@@ -82,16 +85,18 @@ static size_t rsdt_get_entry_count(void) {
 
 static struct madt *madt = NULL;
 
-bool madt_find(uint64_t *pml4) {
+bool madt_find(void) {
     size_t length = rsdt_get_entry_count();
     struct rsdt *rsdt =
         (struct rsdt *)(KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
 
     for (size_t i = 0; i < length; i++) {
-        map_page(pml4, KERNEL_MAPPING_ADDRESS | (uint64_t)rsdt->entry[i], (uint64_t)rsdt->entry[i], PAGE_PRESENT);
-        // triple faults here
+        map_page(KERNEL_MAPPING_ADDRESS | (uint64_t)rsdt->entry[i],
+                 (uint64_t)rsdt->entry[i], PAGE_PRESENT);
+
         struct description_header *description_header =
-            (struct description_header *)(KERNEL_MAPPING_ADDRESS | (uint64_t)rsdt->entry[i]);
+            (struct description_header *)(KERNEL_MAPPING_ADDRESS |
+                                          (uint64_t)rsdt->entry[i]);
         if (cmp_signature(description_header->signature, MADT_SIGNATURE)) {
             madt = (struct madt *)(uint64_t)rsdt->entry[i];
             return true;
@@ -100,11 +105,11 @@ bool madt_find(uint64_t *pml4) {
     return false;
 }
 
-bool madt_map(uint64_t *pml4) {
+bool madt_map(void) {
     uint64_t address = (uint64_t)madt;
-    map_page(pml4, KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
+    map_page(KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
     madt = (struct madt *)(KERNEL_MAPPING_ADDRESS | address);
-    return verify_mapping(pml4, KERNEL_MAPPING_ADDRESS | address);
+    return verify_mapping(KERNEL_MAPPING_ADDRESS | address);
 }
 
 bool madt_verify(void) {
@@ -120,31 +125,30 @@ uint32_t madt_get_lapic_address(void) {
     return madt->local_interrupt_controller_address;
 }
 
-static uint32_t ioapic_address = 0;
+static struct madt_entry **madt_entries = NULL;
+static size_t max_madt_entries = 0;
 
-size_t ioapic_get_entry_count(void) {
+size_t ioapic_count_entries(void) {
     // all entries are after madt
     struct madt_entry *madt_entry =
         (struct madt_entry *)((uint8_t *)madt + sizeof(struct madt));
     // madt->length is length of bytes to just add madt with length to get end
     // address
+
     uint8_t *end = (uint8_t *)madt + madt->length;
+    max_madt_entries =
+        (end - (uint8_t *)madt_entry) / sizeof(struct madt_entry);
+    if (madt_entries) free(madt_entries);
+    madt_entries = kmalloc(sizeof(*madt_entries) * max_madt_entries);
+
     // they vary in different types tho
-    size_t count = 0;
-    // todo: rewrite when heap is implemented
-    while ((uint8_t *)madt_entry < end) {
-        if (madt_entry->type == 1) {
-            // we cast it
-            struct madt_entry_apicio *madt_entry_apicio =
-                (struct madt_entry_apicio *)madt_entry;
-            if (!ioapic_address)
-                ioapic_address = madt_entry_apicio->ioapic_address;
-            count++;
-        }
+
+    for (size_t i = 0; (uint8_t *)madt_entry < end; i++) {
+        madt_entries[i] = madt_entry;
         madt_entry =
             (struct madt_entry *)((uint8_t *)madt_entry + madt_entry->length);
     }
-    return count;
+    return max_madt_entries;
 }
 
-uint32_t get_first_ioapic_address(void) { return ioapic_address; }
+struct madt_entry **get_madt_entries(void) { return madt_entries; }

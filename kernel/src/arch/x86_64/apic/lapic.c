@@ -58,10 +58,10 @@ uint32_t read_reg(void *lapicbase, uint32_t reg) {
 
 #define LAPIC_VIRTUAL_ADDRESS (KERNEL_MAPPING_ADDRESS | BASE_LAPIC)
 
-bool map_apic(uint64_t *pml4) {
-    map_page(pml4, LAPIC_VIRTUAL_ADDRESS, BASE_LAPIC,
+bool map_apic(void) {
+    map_page(LAPIC_VIRTUAL_ADDRESS, BASE_LAPIC,
              PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
-    return verify_mapping(pml4, LAPIC_VIRTUAL_ADDRESS);
+    return verify_mapping(LAPIC_VIRTUAL_ADDRESS);
 
 }
 

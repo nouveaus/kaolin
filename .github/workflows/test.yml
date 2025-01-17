@@ -1,0 +1,33 @@
+name: Test
+on:
+  - pull_request
+  - push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Compile
+        run: |
+          # todo: massive workaround, we need to use a proper x86_64 toolchain
+          cmake -B build -DKAOLIN_ENABLE_TESTS=ON -DCMAKE_C_FLAGS="-fno-PIC" .
+          cmake --build build
+      - name: Test
+        run: |
+          # we can't just cmake --target run because we want to map the exit code
+          set +e
+
+          qemu-system-x86_64 \
+            -cpu qemu64 \
+            -drive file=build/os.img,format=raw \
+            -serial stdio \
+            -device isa-debug-exit,iobase=0xf4,iosize=0x04 && exit 33
+          exit_code=$?
+          if [[ $exit_code -eq 31 ]]; then
+            exit 0;
+          else
+            exit $exit_code;
+          fi;

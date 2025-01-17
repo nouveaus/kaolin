@@ -16,11 +16,21 @@
 #include "arch/x86_64/vga/vga.h"
 #include "io.h"
 
+#ifdef KAOLIN_TESTS
+#    include "test.h"
+
+extern struct test_info test_info_start;
+extern struct test_info test_info_end;
+#endif
+
 static void read_acpi(void);
+
 static void setup_idt(void);
 
-void _Noreturn _die(void) {
-    while (1) asm volatile("cli\nhlt" ::);
+_Noreturn static void _die(void) {
+    while (1) {
+        asm volatile("cli\nhlt" ::);
+    }
 }
 
 // todo: move this to its own file later
@@ -44,19 +54,6 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     paging_init(parameters.pml4);
 
     heap_init();
-
-    int *test = kmalloc(sizeof(int));
-    *test = 2;
-    krintf("test: %d\n", *test);
-    int *test2 = kmalloc(sizeof(int) * 4096);
-    puts("test 2\n");
-    for (size_t i = 0; i < 4096; i++) {
-        test2[i] = i;
-        krintf("%d, ", test2[i]);
-    }
-    putc('\n');
-    free(test);
-    free(test2);
 
     if (!apic_is_supported()) {
         puts("APIC not supported\n");
@@ -86,22 +83,21 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     setup_idt();
     puts("Successfully loaded idt\n");
 
+#ifdef KAOLIN_TESTS
+    int index = 0;
+
+    for (struct test_info *test = &test_info_start; test != &test_info_end; test++) {
+        krintf("\n\nRunning test %d (%s)\n", ++index, test->name);
+        (test->test)();
+
+        krintf("\n\nPassed test %d (%s)\n", index, test->name);
+    }
+
+    outw(0xf4, 0x10);
+    _die();
+#else
     char message[] = "X Hello world!\n";
     unsigned int i = 0;
-
-    uint64_t test_virtual_address = (KERNEL_MAPPING_ADDRESS | 0xFFFFFFF);
-    map_page(test_virtual_address, 0xFFFFFFF, PAGE_PRESENT);
-    if (!verify_mapping(test_virtual_address)) {
-        puts("Could not page correctly!\n");
-        _die();
-    }
-    free_address(test_virtual_address);
-    if (verify_mapping(test_virtual_address)) {
-        puts("Could not free virtual address correctly!\n");
-        _die();
-    }
-
-    puts("Successfully freed virtual address!\n");
 
     while (1) {
         message[0] = '0' + i;
@@ -120,6 +116,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
 
         ksleep(276447232);
     }
+#endif
 }
 
 static void read_acpi(void) {

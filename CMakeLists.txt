@@ -21,4 +21,10 @@ add_custom_command(
 add_custom_target(os ALL DEPENDS "os.img")
 add_dependencies(os bootloader kernel)
 
-add_custom_target(run COMMAND qemu-system-x86_64 -cpu qemu64 -drive file=os.img,format=raw -serial stdio DEPENDS os)
+add_custom_target(run
+        COMMAND qemu-system-x86_64
+                -cpu qemu64
+                -drive file=os.img,format=raw
+                -serial stdio
+                -device isa-debug-exit,iobase=0xf4,iosize=0x04
+        DEPENDS os)

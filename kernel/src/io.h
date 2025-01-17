@@ -1,5 +1,8 @@
 #pragma once
 
+// Enables dual output to some serial output device
+void enable_serial_output(void);
+
 // Prints the integer given to the terminal
 void puti(int num);
 

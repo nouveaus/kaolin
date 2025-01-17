@@ -93,6 +93,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
         krintf("\n\nPassed test %d (%s)\n", index, test->name);
     }
 
+    krintf("Passed all tests\n");
     outw(0xf4, 0x10);
     _die();
 #else

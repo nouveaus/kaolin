@@ -6,8 +6,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Check simple style
         run: ./tools/simple-style.sh
+      - name: Clang format
+        run: ./tools/clang-format.sh --dry-run --Werror

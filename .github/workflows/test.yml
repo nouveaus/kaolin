@@ -5,9 +5,13 @@ on:
 
 jobs:
   test:
+    if: "! contains(toJSON(github.event.commits.*.message), '[test skip]')"
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Download packages
+        run: |
+          sudo apt-get install nasm
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Compile

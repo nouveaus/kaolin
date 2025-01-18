@@ -71,7 +71,7 @@ struct gdt_system_entry {
     uint64_t reserved_low : 8;
     uint64_t must_be_zero : 5;
     uint64_t reerved_high : 19;
-} __attribute__((packed));
+} __attribute__((packed)); 
 
 // Refer to page 377 (Figure 12-8) in AMD manual
 struct tss_entry {

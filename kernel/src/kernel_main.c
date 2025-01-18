@@ -24,14 +24,10 @@ void _Noreturn _die(void) {
     while (1) asm volatile("cli\nhlt" ::);
 }
 
-// todo: move this to its own file later
-void exception_handler(void) {
-    puts("Fatal Error Occurred!");
-    _die();
-}
-
 void _Noreturn user_main(void) {
-    while(1) krintf("sigma balls!\n");
+    _die();
+    puts("test\n");
+    while(1);
 }
 
 /*
@@ -124,7 +120,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
 
         ksleep(276447232);
     }
-    enter_usermode((void *) user_main);
+    enter_usermode((void *)user_main);
 }
 
 static void read_acpi(void) {

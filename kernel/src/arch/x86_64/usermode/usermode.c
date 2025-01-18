@@ -33,9 +33,9 @@ void enter_usermode(void *function_address) {
     *ring3_kdata = *ring3_kcode;
     ring3_kdata->code = 0;
     ring3_kdata->long_mode = 0;
-    
+
     struct gdt_entry *ring3_code = &gdt.user_code;
-    
+
     struct gdt_entry *ring3_data = &gdt.user_data;
 
     // ! EVERYTHING NOT SET IS ZERO !
@@ -111,17 +111,17 @@ void enter_usermode(void *function_address) {
     // ! not paged ?
     uint64_t new = (KERNEL_MAPPING_ADDRESS | (uint64_t)&rsp0_stack[4095]);
     map_page(new, (uint64_t)&rsp0_stack[4095], PAGE_PRESENT | PAGE_WRITE | PAGE_USER);
-    
+
 
     asm volatile(
             "mov %0, %%rax\n"// get the stack
-            
+
             "push $0x23\n"   // 0x20 | 3 (user data selector)
             "push %%rax\n"   // stack address
-            
+
             // pushfq is sufficient but just in case
             "push $0x202\n"// rflag (interrupt enable flag on)
-            
+
             "push $0x1b\n" // 0x18 | 3 (user code selector)
             "push %1\n"    // function
             "iretq\n" ::

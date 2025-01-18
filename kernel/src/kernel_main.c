@@ -25,8 +25,7 @@ void _Noreturn _die(void) {
 }
 
 void _Noreturn user_main(void) {
-    _die();
-    puts("test\n");
+    //puts("test\n");
     while(1);
 }
 

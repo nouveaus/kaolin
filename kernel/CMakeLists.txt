@@ -1,3 +1,5 @@
+option(KAOLIN_ENABLE_TESTS "Enable tests" OFF)
+
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel.ld")
 
 set(COMPILE_OPTIONS
@@ -18,6 +20,16 @@ target_compile_options(drivers PRIVATE
         -mgeneral-regs-only
 )
 
+if(KAOLIN_ENABLE_TESTS)
+    add_compile_definitions(KAOLIN_TESTS)
+
+    set(KAOLIN_TESTS
+            src/arch/x86_64/tests/test.c
+            src/arch/x86_64/tests/memory_tests.c
+            src/tests/heap_tests.c
+    )
+endif()
+
 add_executable(kernel
         src/arch/x86_64/acpi/acpi.c
         src/arch/x86_64/apic/ioapic.c
@@ -36,6 +48,7 @@ add_executable(kernel
         src/kernel_main.c
         src/io.c
         $<TARGET_OBJECTS:drivers>
+        ${KAOLIN_TESTS}
 )
 
 

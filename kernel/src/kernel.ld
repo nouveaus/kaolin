@@ -30,4 +30,10 @@ SECTIONS {
     .bss : {
         *(.bss)            /* All .bss sections (uninitialized data) go here */
     }
+
+    .test_info : {
+        test_info_start = .;
+        KEEP(*(.test_info));
+        test_info_end = .;
+    }
 }

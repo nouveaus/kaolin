@@ -10,4 +10,3 @@ __attribute__((interrupt)) void exception_handler(struct interrupt_frame *frame)
     krintf("Fatal Error Occurred! Error Code: %x\n", frame->one);
     while (1) asm volatile("cli\nhlt" ::);
 }
-

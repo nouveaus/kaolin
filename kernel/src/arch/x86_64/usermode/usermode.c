@@ -11,8 +11,7 @@ struct {
     uint64_t base;
 } __attribute__((packed)) gdt_descriptor = {
         .limit = sizeof(gdt) - 1,
-        .base = (uint64_t) &gdt
-};
+        .base = (uint64_t) &gdt};
 
 static struct tss_entry tss = {0};
 
@@ -101,32 +100,26 @@ void enter_usermode(void *function_address) {
             "mov $0x23, %%ax\n"
             "mov %%ax, %%ds\n"
             "mov %%ax, %%es\n"
-     //       "mov %%ax, %%fs\n"
-      //      "mov %%ax, %%gs\n" ::);
-      ::);
+            //       "mov %%ax, %%fs\n"
+            //      "mov %%ax, %%gs\n" ::);
+            ::);
 
     krintf("SETUP SEGMENTS %x\n", (uint64_t) function_address);
-
-    // ! triple faults here (General protection fault)
-    // ! not paged ?
-    uint64_t new = (KERNEL_MAPPING_ADDRESS | (uint64_t)&rsp0_stack[4095]);
-    map_page(new, (uint64_t)&rsp0_stack[4095], PAGE_PRESENT | PAGE_WRITE | PAGE_USER);
-
 
     asm volatile(
             "mov %0, %%rax\n"// get the stack
 
-            "push $0x23\n"   // 0x20 | 3 (user data selector)
-            "push %%rax\n"   // stack address
+            "push $0x23\n"// 0x20 | 3 (user data selector)
+            "push %%rax\n"// stack address
 
             // pushfq is sufficient but just in case
             "push $0x202\n"// rflag (interrupt enable flag on)
 
-            "push $0x1b\n" // 0x18 | 3 (user code selector)
-            "push %1\n"    // function
+            "push $0x1b\n"// 0x18 | 3 (user code selector)
+            "push %1\n"   // function
             "iretq\n" ::
-                    "r"((uint64_t) new),
-            "r"((uint64_t)function_address) : "rax");
+                    "r"((uint64_t) &rsp0_stack[4095]),
+            "r"((uint64_t) function_address) : "rax");
 }
 
 // osdev said I needed this

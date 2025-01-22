@@ -26,7 +26,7 @@ void _Noreturn _die(void) {
 
 void _Noreturn user_main(void) {
     //puts("test\n");
-    while(1);
+    while (1);
 }
 
 /*
@@ -114,12 +114,12 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
         //memmap_print_entries(parameters.address_range_count,
         //                     parameters.address_ranges);
-//
+        //
         asm volatile("int %0" : : "i"(0x80) : "memory");
 
         ksleep(276447232);
     }
-    enter_usermode((void *)user_main);
+    enter_usermode((void *) user_main);
 }
 
 static void read_acpi(void) {

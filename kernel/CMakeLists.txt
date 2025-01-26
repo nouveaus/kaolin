@@ -6,7 +6,9 @@ set(COMPILE_OPTIONS
         -ffreestanding          # Not hosted
         -mcmodel=large
         -mno-red-zone           # Required for x86_64
-        -Os
+        -ffunction-sections
+        -fdata-sections
+        -O1
 )
 
 add_library(drivers OBJECT
@@ -64,6 +66,8 @@ target_compile_options(kernel PRIVATE
 )
 
 target_link_options(kernel PRIVATE
+        -Wl,--gc-sections       # Shrink
+        #-Wl,--print-gc-sections
         -nostdlib               # Not hosted
         -T "${LINKER_SCRIPT}"   # Linker script (relocations, etc.)
         -fno-lto                # LTO causes ld segfaults at the moment

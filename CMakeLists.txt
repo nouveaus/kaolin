@@ -12,6 +12,8 @@ add_custom_command(
                 --kernel $<TARGET_FILE:kernel>
                 --entry 0xD000
                 --output "os.img"
+                --cc ${CMAKE_C_COMPILER}
+                --ls ${CMAKE_CURRENT_SOURCE_DIR}/kernel/src/x86_64.ld
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/bind_kernel.py
                 "bootloader/boot.bin"
                 $<TARGET_FILE:kernel>

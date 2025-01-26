@@ -10,7 +10,7 @@ add_custom_command(
         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/bind_kernel.py
                 --bootloader "bootloader/boot.bin"
                 --kernel $<TARGET_FILE:kernel>
-                --entry 0x2000
+                --entry 0xD000
                 --output "os.img"
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/bind_kernel.py
                 "bootloader/boot.bin"

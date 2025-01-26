@@ -120,9 +120,5 @@ void enter_usermode(void *function_address) {
             "iretq\n" ::
                     "r"((uint64_t) &rsp0_stack[4095]),
             "r"((uint64_t) function_address) : "rax");
-}
-
-// osdev said I needed this
-void tss_set_kernel_stack(uint64_t stack) {
-    tss.rsp0 = stack;
+    puts("foo\n");
 }

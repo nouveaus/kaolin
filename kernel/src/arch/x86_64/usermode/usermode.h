@@ -101,5 +101,5 @@ struct gdt {
     struct gdt_system_entry tss;
 } __attribute__((packed));
 
+// Enters usermode
 void enter_usermode(void *function_address);
-void tss_set_kernel_stack(uint64_t stack);

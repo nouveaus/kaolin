@@ -27,6 +27,7 @@ if(KAOLIN_ENABLE_TESTS)
             src/arch/x86_64/tests/test.c
             src/arch/x86_64/tests/memory_tests.c
             src/tests/heap_tests.c
+            src/arch/x86_64/tests/usermode_tests.c
     )
 endif()
 

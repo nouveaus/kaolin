@@ -1,7 +1,5 @@
 #include "usermode.h"
 
-#include "../../../io.h"
-
 #include "../memory/paging.h"
 
 static struct gdt gdt = {0};
@@ -84,17 +82,13 @@ void enter_usermode(void *function_address) {
 
 
     // ring 3 time
-    // triple faults here sometimes?
     asm volatile("lgdt %0\n" ::"m"(gdt_descriptor));
-
-    krintf("GDT LOADED\n");
 
     // flush tss
     asm volatile(
             "mov $40, %%ax\n"
             "ltr %%ax" ::: "ax");
 
-    // triple faults here sometimes too? A
     asm volatile(
             // not too sure if this is allowed for x86_64
             "mov $0x23, %%ax\n"
@@ -103,9 +97,7 @@ void enter_usermode(void *function_address) {
             //       "mov %%ax, %%fs\n"
             //      "mov %%ax, %%gs\n" ::);
             ::);
-
-    krintf("SETUP SEGMENTS %x\n", (uint64_t) function_address);
-
+    
     asm volatile(
             "mov %0, %%rax\n"// get the stack
 
@@ -120,5 +112,4 @@ void enter_usermode(void *function_address) {
             "iretq\n" ::
                     "r"((uint64_t) &rsp0_stack[4095]),
             "r"((uint64_t) function_address) : "rax");
-    puts("foo\n");
 }

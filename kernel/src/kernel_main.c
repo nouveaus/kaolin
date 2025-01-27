@@ -28,12 +28,6 @@ static void read_acpi(void);
 
 static void setup_idt(void);
 
-_Noreturn static void _die(void) {
-    while (1) {
-        asm volatile("cli\nhlt" ::);
-    }
-}
-
 void _Noreturn user_main(void) {
     //puts("test\n");
     while (1);
@@ -98,20 +92,6 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     _die();
 #else
     char message[] = "X Hello world!\n";
-
-    uint64_t test_virtual_address = (KERNEL_MAPPING_ADDRESS | 0xFFFFFFF);
-    map_page(test_virtual_address, 0xFFFFFFF, PAGE_PRESENT);
-    if (!verify_mapping(test_virtual_address)) {
-        puts("Could not page correctly!\n");
-        _die();
-    }
-    free_address(test_virtual_address);
-    if (verify_mapping(test_virtual_address)) {
-        puts("Could not free virtual address correctly!\n");
-        _die();
-    }
-
-    puts("Successfully freed virtual address!\n");
 
     for (size_t i = 0; i < 1; i++) {
         message[0] = '0' + i;
@@ -207,7 +187,7 @@ static void setup_idt(void) {
     // we have interrupt after 31 since 0-31 are reserved for errors
     setup_interrupt_gate(0x20, timer_handler, INTERRUPT_64_GATE, 0, 0);
     setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_64_GATE, 0, 0);
-    setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 0, 0);
+    setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 3, 0);
 
     load_idt();
 }

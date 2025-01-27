@@ -26,3 +26,6 @@ void *kmalloc(size_t size);
 void free(void *address);
 
 void exception_handler(struct interrupt_frame *frame);
+
+// Stops the kernel
+void _die(void);

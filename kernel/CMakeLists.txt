@@ -1,4 +1,5 @@
-option(KAOLIN_ENABLE_TESTS "Enable tests" OFF)
+unset(KAOLIN_ENABLE_TESTS CACHE)
+option(KAOLIN_ENABLE_TESTS "Enable tests" ON)
 
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel.ld")
 

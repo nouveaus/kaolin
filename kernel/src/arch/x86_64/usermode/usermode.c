@@ -97,7 +97,7 @@ void enter_usermode(void *function_address) {
             //       "mov %%ax, %%fs\n"
             //      "mov %%ax, %%gs\n" ::);
             ::);
-    
+
     asm volatile(
             "mov %0, %%rax\n"// get the stack
 

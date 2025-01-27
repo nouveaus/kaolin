@@ -13,7 +13,7 @@ static void usermode_function(void) {
             "int %2"
             : : "r"((unsigned long) 0), "r"(finish), "i"(0x80) : "memory");
     outw(0xf4, 0x10);
-    while(1);
+    while (1);
 }
 
 static void usermode_test(void) {

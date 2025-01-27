@@ -29,7 +29,12 @@ static void read_acpi(void);
 static void setup_idt(void);
 
 void _Noreturn user_main(void) {
-    //puts("test\n");
+    const char *msg = "Entered usermode!\n";
+        asm volatile(
+            "mov %0, %%rax\n"
+            "mov %1, %%rdi\n"
+            "int %2"
+            : : "r"((unsigned long) 0), "r"(msg), "i"(0x80) : "memory");
     while (1);
 }
 
@@ -106,7 +111,6 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
         //memmap_print_entries(parameters.address_range_count,
         //                     parameters.address_ranges);
         //
-        asm volatile("int %0" : : "i"(0x80) : "memory");
 
         ksleep(276447232);
     }

@@ -30,7 +30,7 @@ static void setup_idt(void);
 
 void _Noreturn user_main(void) {
     const char *msg = "Entered usermode!\n";
-        asm volatile(
+    asm volatile(
             "mov %0, %%rax\n"
             "mov %1, %%rdi\n"
             "int %2"

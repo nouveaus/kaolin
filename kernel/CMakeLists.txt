@@ -9,6 +9,7 @@ set(COMPILE_OPTIONS
         -ffunction-sections
         -fdata-sections
         -O1
+        -g
 )
 
 add_library(drivers OBJECT
@@ -52,13 +53,6 @@ add_executable(kernel
         src/io.c
         $<TARGET_OBJECTS:drivers>
         ${KAOLIN_TESTS}
-)
-
-
-set_target_properties(kernel PROPERTIES
-        LINKER_LANGUAGE C
-        PREFIX ""               # No lib prefix
-        SUFFIX ""               # Raw code file
 )
 
 target_compile_options(kernel PRIVATE

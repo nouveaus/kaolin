@@ -76,6 +76,18 @@ void vga_putchar(char c) {
             terminal_row = 0;
             break;
         }
+        case '\b': {
+            if (terminal_row == 0 && terminal_column == 0) return;
+
+            terminal_column--;
+            if (terminal_column < 0) {
+                terminal_column = VGA_WIDTH - 1;
+                terminal_row--;
+            }
+
+            terminal_putentryat('\0', terminal_color, terminal_column, terminal_row);
+            break;
+        }
         case 0x20 ... 0x7E: {
             terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
 
@@ -104,14 +116,14 @@ void vga_write_string(const char *data) {
 
 // Found names here: http://www.osdever.net/FreeVGA/vga/crtcreg.htm
 #define CURSOR_ADDRESS_REGISTER 0x3D4
-#define CURSOR_INDEX_REGISTER 0x3D5
+#define CURSOR_INDEX_REGISTER   0x3D5
 
 // Cursor address
 #define CURSOR_START 0x0A
-#define CURSOR_END 0x0B
+#define CURSOR_END   0x0B
 
 #define CURSOR_LOCATION_HIGH 0x0E
-#define CURSOR_LOCATION_LOW 0x0F
+#define CURSOR_LOCATION_LOW  0x0F
 
 void vga_cursor_enable(size_t start, size_t end) {
     // Writes to CURSOR_ADDRESS_REGISTER first
@@ -119,7 +131,7 @@ void vga_cursor_enable(size_t start, size_t end) {
 
     // start determines start of cursor height
     // end determines end of cursor height
-    
+
     outb(CURSOR_ADDRESS_REGISTER, CURSOR_START);
     // retain bits 6 and 7 because they are reserved.
     outb(CURSOR_INDEX_REGISTER, inb(CURSOR_INDEX_REGISTER) & 0xC0 | (uint8_t) (start & 0x3F));

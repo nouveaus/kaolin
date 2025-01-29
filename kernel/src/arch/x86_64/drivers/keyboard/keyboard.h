@@ -9,4 +9,4 @@ void keyboard_init(void);
 
 char getc(void);
 
-void getstr(char *str, size_t len);
+size_t getstr(char *str, size_t len);

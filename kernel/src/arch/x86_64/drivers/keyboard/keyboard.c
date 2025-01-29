@@ -1,8 +1,8 @@
 #include "keyboard.h"
 
 #include "../../../../io.h"
-#include "../../apic/lapic.h"
 #include "../../apic/ioapic.h"
+#include "../../apic/lapic.h"
 #include "../../cpu/idt.h"
 #include "../../serial/serial.h"
 
@@ -62,8 +62,10 @@ static size_t buffer_pos = 0;
 static __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame *frame);
 
 static uint8_t keyboard_code_set_1(const uint8_t data);
+static uint8_t keyboard_shift_conversion(uint8_t data);
 
-static bool caps_lock = 0;
+static bool caps_lock = false;
+static bool shift_pressed = false;
 
 // TODO: use acpi to check if 8042 ps/2 controller is supported
 // todo: poll for keyboard status
@@ -85,8 +87,8 @@ void keyboard_init(void) {
 // CODE SET  1
 // ! for some reason 2,3,4 in qemu r different keys
 static uint8_t keyboard_code_set_1(const uint8_t data) {
-    if (data >= S1_1 && data <= S1_EQUAL) {
-        return "1234567890-="[data - S1_1];
+    if (data >= S1_1 && data <= S1_BACKSPACE) {
+        return "1234567890-=\b"[data - S1_1];
     } else if (data >= S1_Q && data <= S1_ENTER) {
         return "QWERTYUIOP[]\n"[data - S1_Q];
     } else if (data >= S1_A && data <= S1_BACK_TICK) {
@@ -107,6 +109,10 @@ static uint8_t keyboard_code_set_1(const uint8_t data) {
         } else {
             outb(0xED, inb(0xED) & ~(1 << 2));
         }
+    } else if (data == S1_LEFT_SHIFT || data == S1_RIGHT_SHIFT) {
+        shift_pressed = true;
+    } else if (data == S1_LEFT_SHIFT_RELEASED || data == S1_RIGHT_SHIFT_RELEASED) {
+        shift_pressed = false;
     }
 
     return data;
@@ -129,9 +135,49 @@ char getc(void) {
     return data;
 }
 
-void getstr(char *str, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-        str[i] = getc();
+size_t getstr(char *str, size_t len) {
+    size_t i = 0;
+    while (i < len) {
+        char data = getc();
+        if (data == '\n') return i;
+        if (data == '\b') {
+            i--;
+            continue;
+        }
+        str[i] = data;
+        i++;
+    }
+    return i;
+}
+
+static uint8_t keyboard_shift_conversion(uint8_t data) {
+    if (!shift_pressed) return data;
+
+    // Inverse because of caps lock
+    if (data >= 'A' && data <= 'Z') return data + 32;
+    if (data >= 'a' && data <= 'z') return data - 32;
+
+    if (data >= '0' && data <= '9') return ")!@#$%^&*("[data - '0'];
+
+    switch (data) {
+        case '[':
+            return '{';
+        case ']':
+            return '}';
+        case '-':
+            return '_';
+        case '=':
+            return '+';
+        case '\\':
+            return '|';
+        case ';':
+            return ':';
+        case ',':
+            return '<';
+        case '.':
+            return '>';
+        default:
+            return data;
     }
 }
 
@@ -140,7 +186,8 @@ static void keyboard_handler(struct interrupt_frame *frame) {
     // the interrupt trigger once
     uint8_t data = keyboard_code_set_1(inb(0x60));
     if (data >= 'A' && data <= 'Z' && !caps_lock) data += 32;
-    if (data >= ' ' && data <= '~') buffer[buffer_pos++] = data;
+    data = keyboard_shift_conversion(data);
+    if ((data >= ' ' && data <= '~') || data == '\b' || data == '\t') buffer[buffer_pos++] = data;
     // ! minor bug: could loop over and getc wont be able to get the prev 512 chars
     buffer_pos %= MAX_BUFFER_SIZE;
     //if (data >= ' ' && data <= '~')

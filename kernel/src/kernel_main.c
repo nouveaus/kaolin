@@ -102,12 +102,11 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
 
     puts("Enter a string: ");
     char *str = kmalloc(10);
-    getstr(str, 9);
-    str[9] = '\0';
+    str[getstr(str, 9)] = '\0';
     krintf("String: %s\n", str);
     free(str);
-    
-    
+
+
     char message[] = "X Hello world!\n";
 
     for (size_t i = 0; i < 5; i++) {

@@ -6,7 +6,10 @@ set(COMPILE_OPTIONS
         -ffreestanding          # Not hosted
         -mcmodel=large
         -mno-red-zone           # Required for x86_64
-        -Os
+        -ffunction-sections
+        -fdata-sections
+        -O1
+        -g
 )
 
 add_library(drivers OBJECT
@@ -52,18 +55,13 @@ add_executable(kernel
         ${KAOLIN_TESTS}
 )
 
-
-set_target_properties(kernel PROPERTIES
-        LINKER_LANGUAGE C
-        PREFIX ""               # No lib prefix
-        SUFFIX ""               # Raw code file
-)
-
 target_compile_options(kernel PRIVATE
         ${COMPILE_OPTIONS}
 )
 
 target_link_options(kernel PRIVATE
+        -Wl,--gc-sections       # Shrink
+        #-Wl,--print-gc-sections
         -nostdlib               # Not hosted
         -T "${LINKER_SCRIPT}"   # Linker script (relocations, etc.)
         -fno-lto                # LTO causes ld segfaults at the moment

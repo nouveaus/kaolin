@@ -29,4 +29,4 @@ void free(void *address);
 __attribute__((interrupt)) void exception_handler(struct interrupt_frame *frame);
 
 // Stops the kernel
-_Noreturn void _die(void);
+void _Noreturn _die(void);

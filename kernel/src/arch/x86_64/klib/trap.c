@@ -2,7 +2,7 @@
 
 #include "../../../io.h"
 
-__attribute__((interrupt)) void trap(struct interrupt_frame *frame) {
+void trap(struct interrupt_frame *frame) {
     // rax is the system call number
     // args are in rdi, rsi, rdx
 
@@ -29,15 +29,18 @@ __attribute__((interrupt)) void trap(struct interrupt_frame *frame) {
             puti((int) (arg_1 & 0xFFFFFFFF));
             break;
         default:
-            // todo: return a sentinel value to indicate invalids
-            puts("Invalid system call!\n");
+            asm volatile("mov $0, %%rax\n" : : "r"((uint64_t) -1));
     }
-
-
-    //puts("Trap\n");
 }
 
-__attribute__((interrupt)) void exception_handler(struct interrupt_frame *frame) {
-    krintf("Fatal Error Occurred! Error Code: %x\n", frame->one);
-    while (1) asm volatile("cli\nhlt" ::);
+void exception_handler(struct interrupt_frame *frame) {
+    puts("Exception Occurred!\n");
+    krintf("Error Code/RIP: %x\n", frame->six);
+    krintf("RIP/CS:         %x\n", frame->five);
+    krintf("CS/RFLAGS:      %x\n", frame->four);
+    krintf("RFLAGS/RSP:     %x\n", frame->three);
+    krintf("RSP/SS:         %x\n", frame->two);
+    krintf("SS:             %x\n", frame->one);
+
+    _die();
 }

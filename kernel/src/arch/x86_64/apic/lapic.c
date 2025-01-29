@@ -24,7 +24,7 @@ int apic_get_id(void) {
 static void cpu_set_apic_base(uintptr_t apic) {
     uint32_t edx = 0;
     // osdev says 0xfffff0000 but thats 36 bits - might be a typo?
-    uint32_t eax = (apic & 0xFFFFFF000) | IA32_APIC_BASE_MSR_ENABLE;
+    uint32_t eax = (apic & 0xFFFFF000) | IA32_APIC_BASE_MSR_ENABLE;
 
     cpu_set_msr(IA32_APIC_BASE_MSR, eax, edx);
 }

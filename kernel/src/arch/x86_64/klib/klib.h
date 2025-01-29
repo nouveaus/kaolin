@@ -16,7 +16,7 @@ struct interrupt_frame {
 } __attribute__((packed));
 
 // Trap gate
-void trap(struct interrupt_frame *frame);
+__attribute__((interrupt)) void trap(struct interrupt_frame *frame);
 
 // Initialises the heap by mapping it in virtual memory.
 void heap_init(void);
@@ -25,7 +25,8 @@ void *kmalloc(size_t size);
 // Frees the memory allocated from heap.
 void free(void *address);
 
-void exception_handler(struct interrupt_frame *frame);
+// Exception Handler
+__attribute__((interrupt)) void exception_handler(struct interrupt_frame *frame);
 
 // Stops the kernel
-void _die(void);
+_Noreturn void _die(void);

@@ -13,9 +13,11 @@ struct {
 
 static struct tss_entry tss = {0};
 
-static uint8_t ist1_stack[4096] __attribute__((aligned(16)));
-static uint8_t ist2_stack[4096] __attribute__((aligned(16)));
-static uint8_t rsp0_stack[4096] __attribute__((aligned(16)));
+#define STACK_SIZE 4096
+
+static uint8_t ist1_stack[STACK_SIZE] __attribute__((aligned(16)));
+static uint8_t ist2_stack[STACK_SIZE] __attribute__((aligned(16)));
+static uint8_t rsp0_stack[STACK_SIZE] __attribute__((aligned(16)));
 
 void enter_usermode(void *function_address) {
 
@@ -76,9 +78,9 @@ void enter_usermode(void *function_address) {
     ring3_tss->base_high = (base >> 27) & 0xFF;
     ring3_tss->limit_high = (limit >> 27) & 0xF;
 
-    tss.ist1 = (uint64_t) &ist1_stack[4095];// this one is for traps
-    tss.ist2 = (uint64_t) &ist2_stack[4095];// for double faults
-    tss.rsp0 = (uint64_t) &rsp0_stack[4095];// for kernel stack
+    tss.ist1 = (uint64_t) &ist1_stack[STACK_SIZE - 1];// this one is for traps
+    tss.ist2 = (uint64_t) &ist2_stack[STACK_SIZE - 1];// for double faults
+    tss.rsp0 = (uint64_t) &rsp0_stack[STACK_SIZE - 1];// for kernel stack
 
 
     // ring 3 time
@@ -93,10 +95,7 @@ void enter_usermode(void *function_address) {
             // not too sure if this is allowed for x86_64
             "mov $0x23, %%ax\n"
             "mov %%ax, %%ds\n"
-            "mov %%ax, %%es\n"
-            //       "mov %%ax, %%fs\n"
-            //      "mov %%ax, %%gs\n" ::);
-            ::);
+            "mov %%ax, %%es\n" ::);
 
     asm volatile(
             "mov %0, %%rax\n"// get the stack
@@ -109,7 +108,9 @@ void enter_usermode(void *function_address) {
 
             "push $0x1b\n"// 0x18 | 3 (user code selector)
             "push %1\n"   // function
-            "iretq\n" ::
-                    "r"((uint64_t) &rsp0_stack[4095]),
-            "r"((uint64_t) function_address) : "rax");
+            "iretq\n" ::"r"((uint64_t) &rsp0_stack[STACK_SIZE - 1]),
+            "r"((uint64_t) function_address)
+            : "rax");
+
+    __builtin_unreachable();
 }

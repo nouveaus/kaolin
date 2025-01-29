@@ -9,7 +9,8 @@ struct {
     uint64_t base;
 } __attribute__((packed)) gdt_descriptor = {
         .limit = sizeof(gdt) - 1,
-        .base = (uint64_t) &gdt};
+        .base = (uint64_t) &gdt,
+};
 
 static struct tss_entry tss = {0};
 

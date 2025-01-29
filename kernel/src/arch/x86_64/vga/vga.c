@@ -1,5 +1,7 @@
 #include "vga.h"
 
+#include "../serial/serial.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -91,10 +93,61 @@ void vga_putchar(char c) {
             break;
         }
     }
+    vga_cursor_update(terminal_column, terminal_row);
 }
 
 void vga_write_string(const char *data) {
     while (*data) {
         vga_putchar(*data++);
     }
+}
+
+// Found names here: http://www.osdever.net/FreeVGA/vga/crtcreg.htm
+#define CURSOR_ADDRESS_REGISTER 0x3D4
+#define CURSOR_INDEX_REGISTER 0x3D5
+
+// Cursor address
+#define CURSOR_START 0x0A
+#define CURSOR_END 0x0B
+
+#define CURSOR_LOCATION_HIGH 0x0E
+#define CURSOR_LOCATION_LOW 0x0F
+
+void vga_cursor_enable(size_t start, size_t end) {
+    // Writes to CURSOR_ADDRESS_REGISTER first
+    // to specify address
+
+    // start determines start of cursor height
+    // end determines end of cursor height
+    
+    outb(CURSOR_ADDRESS_REGISTER, CURSOR_START);
+    // retain bits 6 and 7 because they are reserved.
+    outb(CURSOR_INDEX_REGISTER, inb(CURSOR_INDEX_REGISTER) & 0xC0 | (uint8_t) (start & 0x3F));
+
+    outb(CURSOR_ADDRESS_REGISTER, CURSOR_END);
+    // retain bits 5, 6, 7 because they are reserved.
+    outb(CURSOR_INDEX_REGISTER, inb(CURSOR_INDEX_REGISTER) & 0xE0 | (uint8_t) (end & 0x1f));
+}
+
+void vga_cursor_disable(void) {
+    outb(CURSOR_ADDRESS_REGISTER, CURSOR_START);
+    // set 5th bit to 1 to disable
+    outb(CURSOR_INDEX_REGISTER, inb(CURSOR_INDEX_REGISTER) & 0xC0 | 0x20);
+}
+
+void vga_cursor_update(size_t x, size_t y) {
+    // todo: ensure 8 bits
+    uint16_t pos = y * VGA_WIDTH + x;
+    outb(CURSOR_ADDRESS_REGISTER, CURSOR_LOCATION_LOW);
+    outb(CURSOR_INDEX_REGISTER, (uint8_t) (pos & 0xFF));
+    outb(CURSOR_ADDRESS_REGISTER, CURSOR_LOCATION_HIGH);
+    outb(CURSOR_INDEX_REGISTER, (uint8_t) ((pos >> 8) & 0xFF));
+}
+
+uint16_t vga_cursor_position(void) {
+    uint16_t pos = 0;
+    outb(CURSOR_ADDRESS_REGISTER, CURSOR_LOCATION_LOW);
+    pos |= inb(CURSOR_INDEX_REGISTER);
+    outb(CURSOR_ADDRESS_REGISTER, CURSOR_LOCATION_HIGH);
+    pos |= inb(CURSOR_INDEX_REGISTER);
 }

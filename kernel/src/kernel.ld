@@ -7,7 +7,7 @@ SECTIONS {
     /* Define the memory layout and where sections are placed */
 
     /* Place the code starting at 0x2000 */
-    . = 0x2000; /* Set the starting address for code */
+    . = 0xD000; /* Set the starting address for code */
 
     /* kmain must be absolutely first */
     .text.kernel_main : {

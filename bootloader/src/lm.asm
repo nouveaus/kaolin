@@ -2,6 +2,7 @@
 
 PAGE_PRESENT    equ (1 << 0)
 PAGE_WRITE      equ (1 << 1)
+PAGE_USER       equ (1 << 2)
 
 ; check if it collides with anything later on
 paging_table_buffer equ 0x9000
@@ -79,7 +80,7 @@ switch_to_lm:
 
 	; address of page directory pointer table
 	lea	eax, 	[di + 0x1000]
-	or	eax, 	PAGE_PRESENT | PAGE_WRITE
+	or	eax, 	PAGE_PRESENT | PAGE_WRITE | PAGE_USER
 	mov	[di], eax
 
 	; point the page directory pointer table [0]
@@ -87,7 +88,7 @@ switch_to_lm:
 
 	; address of page directory
 	lea	eax, 	[di + 0x2000]
-	or	eax, 	PAGE_PRESENT | PAGE_WRITE
+	or	eax, 	PAGE_PRESENT | PAGE_WRITE | PAGE_USER
 	mov	[di + 0x1000], eax
 
 	; point the page directory [0]
@@ -95,13 +96,13 @@ switch_to_lm:
 
 	; address of page table
 	lea	eax, 	[di + 0x3000]
-	or	eax, 	PAGE_PRESENT | PAGE_WRITE
+	or	eax, 	PAGE_PRESENT | PAGE_WRITE | PAGE_USER
 	mov	[di + 0x2000], eax
 
 	; initialise variables before build
 	push	di
 	lea	di, 	[di + 0x3000]
-	mov	eax, 	PAGE_PRESENT | PAGE_WRITE
+	mov	eax, 	PAGE_PRESENT | PAGE_WRITE | PAGE_USER
 
 	; builds page table
 	; it points each entry to a address

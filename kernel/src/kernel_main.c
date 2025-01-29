@@ -13,6 +13,7 @@
 #include "arch/x86_64/klib/klib.h"
 #include "arch/x86_64/memory/paging.h"
 #include "arch/x86_64/serial/serial.h"
+#include "arch/x86_64/usermode/usermode.h"
 #include "arch/x86_64/vga/vga.h"
 #include "io.h"
 
@@ -27,16 +28,14 @@ static void read_acpi(void);
 
 static void setup_idt(void);
 
-_Noreturn static void _die(void) {
-    while (1) {
-        asm volatile("cli\nhlt" ::);
-    }
-}
-
-// todo: move this to its own file later
-void exception_handler(void) {
-    puts("Fatal Error Occurred!");
-    _die();
+void _Noreturn user_main(void) {
+    const char *msg = "Entered usermode!\n";
+    asm volatile(
+            "mov %0, %%rax\n"
+            "mov %1, %%rdi\n"
+            "int %2"
+            : : "r"((unsigned long) 0), "r"(msg), "i"(0x80) : "memory");
+    while (1);
 }
 
 /*
@@ -98,9 +97,8 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     _die();
 #else
     char message[] = "X Hello world!\n";
-    unsigned int i = 0;
 
-    while (1) {
+    for (size_t i = 0; i < 1; i++) {
         message[0] = '0' + i;
         i = (i + 1) % 10;
 
@@ -110,13 +108,13 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
                get_timer_ticks(), parameters.address_range_count);
 
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
-        memmap_print_entries(parameters.address_range_count,
-                             parameters.address_ranges);
-
-        asm volatile("int %0" : : "i"(0x80) : "memory");
+        //memmap_print_entries(parameters.address_range_count,
+        //                     parameters.address_ranges);
+        //
 
         ksleep(276447232);
     }
+    enter_usermode((void *) user_main);
 #endif
 }
 
@@ -193,7 +191,7 @@ static void setup_idt(void) {
     // we have interrupt after 31 since 0-31 are reserved for errors
     setup_interrupt_gate(0x20, timer_handler, INTERRUPT_64_GATE, 0, 0);
     setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_64_GATE, 0, 0);
-    setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 0, 0);
+    setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 3, 0);
 
     load_idt();
 }

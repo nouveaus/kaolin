@@ -4,9 +4,16 @@
 #include "../../apic/ioapic.h"
 #include "../../apic/lapic.h"
 #include "../../cpu/idt.h"
+#include "../../klib/klib.h"
 #include "../../serial/serial.h"
 
 #include <stdbool.h>
+
+#define DATA_PORT        0x60
+#define STATUS_REGISTER  0x64
+#define COMMAND_REGISTER STATUS_REGISTER
+
+#define SET_LEDS 0xED
 
 // clang-format off
 enum scan_set_one {
@@ -105,9 +112,13 @@ static uint8_t keyboard_code_set_1(const uint8_t data) {
         caps_lock = !caps_lock;
         // enable caps lock LED
         if (caps_lock) {
-            outb(0xED, inb(0xED) | (1 << 2));
+            outb(DATA_PORT, SET_LEDS);
+            ksleep(5);
+            outb(DATA_PORT, 1 << 2);
         } else {
-            outb(0xED, inb(0xED) & ~(1 << 2));
+            outb(DATA_PORT, SET_LEDS);
+            ksleep(5);
+            outb(DATA_PORT, 0x0);
         }
     } else if (data == S1_LEFT_SHIFT || data == S1_RIGHT_SHIFT) {
         shift_pressed = true;
@@ -184,7 +195,7 @@ static uint8_t keyboard_shift_conversion(uint8_t data) {
 static void keyboard_handler(struct interrupt_frame *frame) {
     // Consume a key, not doing this will only let
     // the interrupt trigger once
-    uint8_t data = keyboard_code_set_1(inb(0x60));
+    uint8_t data = keyboard_code_set_1(inb(DATA_PORT));
     if (data >= 'A' && data <= 'Z' && !caps_lock) data += 32;
     data = keyboard_shift_conversion(data);
     if ((data >= ' ' && data <= '~') || data == '\b' || data == '\t') buffer[buffer_pos++] = data;

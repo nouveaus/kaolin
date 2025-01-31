@@ -9,6 +9,7 @@
 #include "arch/x86_64/cpu/idt.h"
 #include "arch/x86_64/cpu/msr.h"
 #include "arch/x86_64/drivers/keyboard/keyboard.h"
+#include "arch/x86_64/drivers/mouse/mouse.h"
 #include "arch/x86_64/drivers/timer/timer.h"
 #include "arch/x86_64/klib/klib.h"
 #include "arch/x86_64/memory/paging.h"
@@ -96,9 +97,20 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     outw(0xf4, 0x10);
     _die();
 #else
+    puts("Enter a character: ");
+    char c = getc();
+    krintf("Char: %c\n", c);
+
+    puts("Enter a string: ");
+    char *str = kmalloc(10);
+    str[getstr(str, 9)] = '\0';
+    krintf("String: %s\n", str);
+    free(str);
+
+
     char message[] = "X Hello world!\n";
 
-    for (size_t i = 0; i < 1; i++) {
+    for (size_t i = 0; i < 5; i++) {
         message[0] = '0' + i;
         i = (i + 1) % 10;
 
@@ -180,8 +192,6 @@ static void setup_idt(void) {
 
     // system timer
     ioapic_set_redirect((uintptr_t *) IOAPIC_VIRTUAL_ADDRESS, 0, 0x20, apic_id);
-    // keyboard
-    ioapic_set_redirect((uintptr_t *) IOAPIC_VIRTUAL_ADDRESS, 1, 0x21, apic_id);
 
     for (size_t vector = 0; vector < 32; vector++) {
         setup_interrupt_gate(vector, exception_handler, INTERRUPT_64_GATE, 0,
@@ -190,7 +200,9 @@ static void setup_idt(void) {
 
     // we have interrupt after 31 since 0-31 are reserved for errors
     setup_interrupt_gate(0x20, timer_handler, INTERRUPT_64_GATE, 0, 0);
-    setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_64_GATE, 0, 0);
+    keyboard_init();
+    // as of now mouse breaks keyboard and it doesnt work
+    mouse_init();
     setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 3, 0);
 
     load_idt();

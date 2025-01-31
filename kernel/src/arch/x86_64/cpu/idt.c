@@ -15,8 +15,8 @@ static uint16_t idt_segment_descriptor(uint16_t index) {
     return ((index & 0xFFF) << 3);
 }
 
-void setup_interrupt_gate(uint32_t irq, void *base, enum gate_type type, uint8_t privilege_level, uint8_t ist) {
-    struct interrupt_descriptor *interrupt_descriptor = &interrupt_descriptors[irq];
+void setup_interrupt_gate(uint32_t vector, void *base, enum gate_type type, uint8_t privilege_level, uint8_t ist) {
+    struct interrupt_descriptor *interrupt_descriptor = &interrupt_descriptors[vector];
 
     // present bit must be set for descriptor to be valid
     interrupt_descriptor->type_attributes |= 1 << 15;

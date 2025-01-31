@@ -9,6 +9,7 @@
 #include "arch/x86_64/cpu/idt.h"
 #include "arch/x86_64/cpu/msr.h"
 #include "arch/x86_64/drivers/keyboard/keyboard.h"
+#include "arch/x86_64/drivers/mouse/mouse.h"
 #include "arch/x86_64/drivers/timer/timer.h"
 #include "arch/x86_64/klib/klib.h"
 #include "arch/x86_64/memory/paging.h"
@@ -200,6 +201,8 @@ static void setup_idt(void) {
     // we have interrupt after 31 since 0-31 are reserved for errors
     setup_interrupt_gate(0x20, timer_handler, INTERRUPT_64_GATE, 0, 0);
     keyboard_init();
+    // as of now mouse breaks keyboard and it doesnt work
+    mouse_init();
     setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 3, 0);
 
     load_idt();

@@ -64,7 +64,7 @@ enum scan_set_one {
 
 #define MAX_BUFFER_SIZE 512
 static char buffer[MAX_BUFFER_SIZE];
-static size_t buffer_pos = 0;
+static volatile size_t buffer_pos = 0;
 
 static __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame *frame);
 
@@ -77,7 +77,6 @@ static bool shift_pressed = false;
 // TODO: use acpi to check if 8042 ps/2 controller is supported
 // todo: poll for keyboard status
 // todo: check keyboard type (1, 2, 3)
-// todo: detect if key is capital or nah (need to detect caps lock and shift)
 
 void keyboard_init(void) {
     // Disable any devices connected to ps/2 ports
@@ -138,7 +137,7 @@ static char keyboard_convert_code(char data) {
 
 // todo: WRITE A FRONTEND FUNCTION FOR KLIB
 char getc(void) {
-    while (buffer_pos == 0) {
+    while (!buffer_pos) {
         __builtin_ia32_pause();
     }
     char data = buffer[--buffer_pos];
@@ -198,10 +197,10 @@ static void keyboard_handler(struct interrupt_frame *frame) {
     uint8_t data = keyboard_code_set_1(inb(DATA_PORT));
     if (data >= 'A' && data <= 'Z' && !caps_lock) data += 32;
     data = keyboard_shift_conversion(data);
-    if ((data >= ' ' && data <= '~') || data == '\b' || data == '\t') buffer[buffer_pos++] = data;
+    if ((data >= ' ' && data <= '~') || data == '\b' || data == '\t' || data == '\n') buffer[buffer_pos++] = data;
     // ! minor bug: could loop over and getc wont be able to get the prev 512 chars
     buffer_pos %= MAX_BUFFER_SIZE;
     //if (data >= ' ' && data <= '~')
-    //    krintf("Keyboard pressed %c\n", data);
+    //    krintf("Keyboard pressed %c %d\n", data, buffer_pos);
     send_apic_eoi();
 }

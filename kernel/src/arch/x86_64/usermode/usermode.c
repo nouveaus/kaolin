@@ -20,8 +20,7 @@ static uint8_t ist1_stack[STACK_SIZE] __attribute__((aligned(16)));
 static uint8_t ist2_stack[STACK_SIZE] __attribute__((aligned(16)));
 static uint8_t rsp0_stack[STACK_SIZE] __attribute__((aligned(16)));
 
-void enter_usermode(void *function_address) {
-
+void enter_usermode(void (*function)(void)) {
     struct gdt_entry *ring3_kcode = &gdt.kernel_code;
     struct gdt_entry *ring3_kdata = &gdt.kernel_data;
     ring3_kcode->read_write = 1;
@@ -110,7 +109,7 @@ void enter_usermode(void *function_address) {
             "push $0x1b\n" // 0x18 | 3 (user code selector)
             "push %1\n"    // function
             "iretq\n" ::"r"((uint64_t) &rsp0_stack[STACK_SIZE - 1]),
-            "r"((uint64_t) function_address)
+            "r"((uint64_t) function)
             : "rax");
 
     __builtin_unreachable();

@@ -123,7 +123,7 @@ void kernel_main(struct boot_parameters parameters) {
 
         ksleep(276447232);
     }
-    enter_usermode((void *) user_main);
+    enter_usermode(user_main);
 #endif
 }
 

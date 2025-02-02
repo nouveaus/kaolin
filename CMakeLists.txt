@@ -17,6 +17,7 @@ add_custom_command(
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/bind_kernel.py
                 "bootloader/boot.bin"
                 $<TARGET_FILE:kernel>
+                ${CMAKE_CURRENT_SOURCE_DIR}/kernel/src/x86_64.ld
         COMMENT "Link bootloader with kernel image"
 )
 

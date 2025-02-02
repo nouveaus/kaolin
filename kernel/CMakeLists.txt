@@ -8,8 +8,6 @@ set(COMPILE_OPTIONS
         -mno-red-zone           # Required for x86_64
         -ffunction-sections
         -fdata-sections
-        -O1
-        -g
 )
 
 add_library(drivers OBJECT

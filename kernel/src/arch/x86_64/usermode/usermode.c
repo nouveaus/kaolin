@@ -79,9 +79,9 @@ void enter_usermode(void *function_address) {
     ring3_tss->base_high = (base >> 27) & 0xFF;
     ring3_tss->limit_high = (limit >> 27) & 0xF;
 
-    tss.ist1 = (uint64_t) &ist1_stack[STACK_SIZE - 1];// this one is for traps
-    tss.ist2 = (uint64_t) &ist2_stack[STACK_SIZE - 1];// for double faults
-    tss.rsp0 = (uint64_t) &rsp0_stack[STACK_SIZE - 1];// for kernel stack
+    tss.ist1 = (uint64_t) ist1_stack + sizeof(ist1_stack); // this one is for traps
+    tss.ist2 = (uint64_t) ist2_stack + sizeof(ist2_stack); // for double faults
+    tss.rsp0 = (uint64_t) rsp0_stack + sizeof(rsp0_stack); // for kernel stack
 
 
     // ring 3 time
@@ -99,16 +99,16 @@ void enter_usermode(void *function_address) {
             "mov %%ax, %%es\n" ::);
 
     asm volatile(
-            "mov %0, %%rax\n"// get the stack
+            "mov %0, %%rax\n" // get the stack
 
-            "push $0x23\n"// 0x20 | 3 (user data selector)
-            "push %%rax\n"// stack address
+            "push $0x23\n" // 0x20 | 3 (user data selector)
+            "push %%rax\n" // stack address
 
             // pushfq is sufficient but just in case
-            "push $0x202\n"// rflag (interrupt enable flag on)
+            "push $0x202\n" // rflag (interrupt enable flag on)
 
-            "push $0x1b\n"// 0x18 | 3 (user code selector)
-            "push %1\n"   // function
+            "push $0x1b\n" // 0x18 | 3 (user code selector)
+            "push %1\n"    // function
             "iretq\n" ::"r"((uint64_t) &rsp0_stack[STACK_SIZE - 1]),
             "r"((uint64_t) function_address)
             : "rax");

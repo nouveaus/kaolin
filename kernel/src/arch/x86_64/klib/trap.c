@@ -6,17 +6,10 @@ void trap(struct interrupt_frame *frame) {
     // rax is the system call number
     // args are in rdi, rsi, rdx
 
-    uint64_t system_call;
-    uint64_t arg_1;
-    uint64_t arg_2;
-    uint64_t arg_3;
-
-    asm volatile("mov %%rax, %0\n"
-                 "mov %%rdi, %1\n"
-                 "mov %%rsi, %2\n"
-                 "mov %%rdx, %3\n"
-                 : "=r"(system_call), "=r"(arg_1), "=r"(arg_2), "=r"(arg_3)
-                 :);
+    register uint64_t system_call asm("rax");
+    register uint64_t arg_1 asm("rdi");
+    register uint64_t arg_2 asm("rsi");
+    register uint64_t arg_3 asm("rdx");
 
     switch (system_call) {
         case 0:

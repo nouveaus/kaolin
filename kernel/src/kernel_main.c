@@ -28,21 +28,30 @@ static void read_acpi(void);
 
 static void setup_idt(void);
 
-void _Noreturn user_main(void) {
-    const char *msg = "Entered usermode!\n";
+void user_puts(const char *s) {
+    register uint64_t syscall asm("rax") = 0;
+    register const char *input asm("rdi") = s;
+
     asm volatile(
-            "mov %0, %%rax\n"
-            "mov %1, %%rdi\n"
-            "int %2"
-            : : "r"((unsigned long) 0), "r"(msg), "i"(0x80) : "memory");
-    while (1);
+            "int $0x80"
+            :
+            : "r"(syscall), "r"(input)
+            :);
+}
+
+_Noreturn void user_main(void) {
+    const char *msg = "Entered usermode!\n";
+
+    while (1) {
+        user_puts(msg);
+    }
 }
 
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected
  * mode.
  */
-void _Noreturn kernel_main(struct boot_parameters parameters) {
+void kernel_main(struct boot_parameters parameters) {
     enable_serial_output();
     vga_initialize();
     uint32_t eax, ebx, ecx, edx;
@@ -114,7 +123,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
 
         ksleep(276447232);
     }
-    enter_usermode((void *) user_main);
+    enter_usermode(user_main);
 #endif
 }
 
@@ -191,7 +200,7 @@ static void setup_idt(void) {
     // we have interrupt after 31 since 0-31 are reserved for errors
     setup_interrupt_gate(0x20, timer_handler, INTERRUPT_64_GATE, 0, 0);
     setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_64_GATE, 0, 0);
-    setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 3, 0);
+    setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 3, 1);
 
     load_idt();
 }

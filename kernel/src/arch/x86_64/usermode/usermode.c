@@ -20,8 +20,7 @@ static uint8_t ist1_stack[STACK_SIZE] __attribute__((aligned(16)));
 static uint8_t ist2_stack[STACK_SIZE] __attribute__((aligned(16)));
 static uint8_t rsp0_stack[STACK_SIZE] __attribute__((aligned(16)));
 
-void enter_usermode(void *function_address) {
-
+void enter_usermode(void (*function)(void)) {
     struct gdt_entry *ring3_kcode = &gdt.kernel_code;
     struct gdt_entry *ring3_kdata = &gdt.kernel_data;
     ring3_kcode->read_write = 1;
@@ -79,18 +78,21 @@ void enter_usermode(void *function_address) {
     ring3_tss->base_high = (base >> 27) & 0xFF;
     ring3_tss->limit_high = (limit >> 27) & 0xF;
 
-    tss.ist1 = (uint64_t) &ist1_stack[STACK_SIZE - 1];// this one is for traps
-    tss.ist2 = (uint64_t) &ist2_stack[STACK_SIZE - 1];// for double faults
-    tss.rsp0 = (uint64_t) &rsp0_stack[STACK_SIZE - 1];// for kernel stack
+    tss.ist1 = (uint64_t) ist1_stack + sizeof(ist1_stack); // this one is for traps
+    tss.ist2 = (uint64_t) ist2_stack + sizeof(ist2_stack); // for double faults
+    tss.rsp0 = (uint64_t) rsp0_stack + sizeof(rsp0_stack); // for kernel stack
 
 
     // ring 3 time
-    asm volatile("lgdt %0\n" ::"m"(gdt_descriptor));
+    asm volatile("lgdt %0" ::"m"(gdt_descriptor));
 
     // flush tss
     asm volatile(
             "mov $40, %%ax\n"
-            "ltr %%ax" ::: "ax");
+            "ltr %%ax\n"
+            :
+            :
+            : "ax");
 
     asm volatile(
             // not too sure if this is allowed for x86_64
@@ -99,19 +101,15 @@ void enter_usermode(void *function_address) {
             "mov %%ax, %%es\n" ::);
 
     asm volatile(
-            "mov %0, %%rax\n"// get the stack
-
-            "push $0x23\n"// 0x20 | 3 (user data selector)
-            "push %%rax\n"// stack address
-
-            // pushfq is sufficient but just in case
-            "push $0x202\n"// rflag (interrupt enable flag on)
-
-            "push $0x1b\n"// 0x18 | 3 (user code selector)
-            "push %1\n"   // function
-            "iretq\n" ::"r"((uint64_t) &rsp0_stack[STACK_SIZE - 1]),
-            "r"((uint64_t) function_address)
-            : "rax");
+            "pushq $0x23\n"  //     SS: 0x20 | 3 (user data selector)
+            "pushq %0\n"     //    RSP: stack address
+            "pushq $0x202\n" // RFLAGS: rflag (interrupt enable flag on)
+            "pushq $0x1b\n"  //     CS: 0x18 | 3 (user code selector)
+            "pushq %1\n"     //    RIP: function
+            "iretq\n"
+            :
+            : "r"((uint64_t) rsp0_stack + sizeof(rsp0_stack)), "r"((uint64_t) function)
+            :);
 
     __builtin_unreachable();
 }

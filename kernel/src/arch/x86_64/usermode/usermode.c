@@ -84,12 +84,15 @@ void enter_usermode(void (*function)(void)) {
 
 
     // ring 3 time
-    asm volatile("lgdt %0\n" ::"m"(gdt_descriptor));
+    asm volatile("lgdt %0" ::"m"(gdt_descriptor));
 
     // flush tss
     asm volatile(
             "mov $40, %%ax\n"
-            "ltr %%ax" ::: "ax");
+            "ltr %%ax\n"
+            :
+            :
+            : "ax");
 
     asm volatile(
             // not too sure if this is allowed for x86_64
@@ -98,19 +101,15 @@ void enter_usermode(void (*function)(void)) {
             "mov %%ax, %%es\n" ::);
 
     asm volatile(
-            "mov %0, %%rax\n" // get the stack
-
-            "push $0x23\n" // 0x20 | 3 (user data selector)
-            "push %%rax\n" // stack address
-
-            // pushfq is sufficient but just in case
-            "push $0x202\n" // rflag (interrupt enable flag on)
-
-            "push $0x1b\n" // 0x18 | 3 (user code selector)
-            "push %1\n"    // function
-            "iretq\n" ::"r"((uint64_t) &rsp0_stack[STACK_SIZE - 1]),
-            "r"((uint64_t) function)
-            : "rax");
+            "pushq $0x23\n"  //     SS: 0x20 | 3 (user data selector)
+            "pushq %0\n"     //    RSP: stack address
+            "pushq $0x202\n" // RFLAGS: rflag (interrupt enable flag on)
+            "pushq $0x1b\n"  //     CS: 0x18 | 3 (user code selector)
+            "pushq %1\n"     //    RIP: function
+            "iretq\n"
+            :
+            : "r"((uint64_t) rsp0_stack + sizeof(rsp0_stack)), "r"((uint64_t) function)
+            :);
 
     __builtin_unreachable();
 }

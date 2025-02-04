@@ -36,7 +36,7 @@ void *memcpy(void *dst, const void *src, size_t len) {
 void *memmove(void *dst, const void *src, size_t len) {
     if (dst > src) {
         for (size_t i = len; i > 0; i--) {
-            ((char *) dst)[i - 1] = ((const char*) src)[i - 1];
+            ((char *) dst)[i - 1] = ((const char *) src)[i - 1];
         }
     } else {
         memcpy(dst, src, len);

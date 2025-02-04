@@ -28,7 +28,7 @@ bool rsdp_find(void) {
     // Refer to 5.2.5.1 and 5.2.5.3 from ACPI Specification
     char *addr = (char *) BIOS_MEMORY_BEGIN;
     for (;
-         addr < (char *) BIOS_MEMORY_END && !cmp_signature(addr, RSDP_SIGNATURE);
+         addr < (char *) BIOS_MEMORY_END && memcmp(addr, RSDP_SIGNATURE, 8);
          addr += 16);
     rsdp = (struct rsdp *) addr;
     return addr < (char *) BIOS_MEMORY_END;
@@ -99,7 +99,7 @@ bool madt_find(void) {
         struct description_header *description_header =
                 (struct description_header *) (KERNEL_MAPPING_ADDRESS |
                                                (uint64_t) rsdt->entry[i]);
-        if (cmp_signature(description_header->signature, MADT_SIGNATURE)) {
+        if (!memcmp(description_header->signature, MADT_SIGNATURE, 4)) {
             madt = (struct madt *) (uint64_t) rsdt->entry[i];
             return true;
         }

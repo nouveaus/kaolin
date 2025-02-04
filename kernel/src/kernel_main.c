@@ -47,12 +47,6 @@ _Noreturn void user_main(void) {
     }
 }
 
-// how have we gone so far without this??
-void memset(void *dst, char val, size_t size) {
-    for (size_t i = 0; i < size; i++) {
-        ((char *) dst)[i] = val;
-    }
-}
 
 // Each table has 512 entries (4KB pages in 64-bit mode)
 #define PAGE_SIZE 0x1000

@@ -184,11 +184,23 @@ void *mmap(void *address, size_t size, void **end_address) {
     void *block_start = address;
     for (size_t i = 0; i < pages_required; i++) {
         map_page(KERNEL_MAPPING_ADDRESS | (uint64_t) address, (uint64_t) address,
-                 PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
+                 PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
         address = (uint8_t *) address + 0x1000;
     }
 
     if (end_address != NULL) *end_address = address;
 
     return (void *) (KERNEL_MAPPING_ADDRESS | (uint64_t) block_start);
+}
+
+// 16 mib
+#define N_MIB 0x10
+
+void map_first_16(void) {
+
+    for (int i = 0; i < N_MIB; i++) {
+        for (int j = 0; j < 512; j++) {
+            map_page(KERNEL_MAPPING_ADDRESS | (j * (i + 1) * PAGE_SIZE), (uint64_t) (j * (i + 1) * PAGE_SIZE), PAGE_PRESENT | PAGE_RW | PAGE_USER);
+        }
+    }
 }

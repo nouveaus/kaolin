@@ -17,7 +17,7 @@ void ioapic_write_reg(void *ioapicaddr, uint32_t reg, uint32_t value) {
 }
 
 bool ioapic_map(void) {
-    map_page(IOAPIC_VIRTUAL_ADDRESS, IOAPICBASE, PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
+    map_page(IOAPIC_VIRTUAL_ADDRESS, IOAPICBASE, PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
     return verify_mapping(IOAPIC_VIRTUAL_ADDRESS);
 }
 

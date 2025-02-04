@@ -25,9 +25,9 @@ struct page_entry {
     uint64_t nx : 1;
 } __attribute__((packed));
 
-#define PAGE_PRESENT       0x1
-#define PAGE_WRITE         0x2
-#define PAGE_USER          0x4
+#define PAGE_PRESENT       (1ULL << 0) // Present
+#define PAGE_RW            (1ULL << 1) // R/W
+#define PAGE_USER          (1ULL << 2) // CPL=3 access
 #define PAGE_CACHE_DISABLE 0x10
 
 // kernel uses the upper address for mmio stuff
@@ -48,3 +48,6 @@ bool verify_mapping(uint64_t virtual_address);
 
 // Maps pages depending on the given size
 void *mmap(void *address, size_t size, void **end_address);
+
+// Maps the first 16 mib to higher kernel
+void map_first_16(void);

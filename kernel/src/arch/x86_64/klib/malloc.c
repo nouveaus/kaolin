@@ -4,7 +4,6 @@
 #include "klib.h"
 
 #define HEAP_START 0x01000000
-
 // needs to be <= 4096 bytes
 #define HEAP_INITIAL_SIZE 0x01000
 
@@ -49,7 +48,7 @@ static struct heap_block *allocate_free_block(void *base, size_t size,
 
 void heap_init(void) {
     map_page(KERNEL_MAPPING_ADDRESS | HEAP_START, (uint64_t) HEAP_START,
-             PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
+             PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
     allocate_free_block(heap_start, HEAP_INITIAL_SIZE, NULL, NULL);
     //  for expand heap
 }

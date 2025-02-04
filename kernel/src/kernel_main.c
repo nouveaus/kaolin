@@ -47,11 +47,71 @@ _Noreturn void user_main(void) {
     }
 }
 
+// how have we gone so far without this??
+void memset(void *dst, char val, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        ((char *) dst)[i] = val;
+    }
+}
+
+// Each table has 512 entries (4KB pages in 64-bit mode)
+#define PAGE_SIZE 0x1000
+
+typedef struct {
+    uint64_t entries[512];
+} __attribute__((aligned(0x1000))) table;
+
+// How many first 2 MiB to identity map
+#define N_MIB 0x01
+
+static table pml4;
+static table pdpt;
+static table pd;
+static table pt[N_MIB];
+
+void identity_map(struct boot_parameters *parameters) {
+    // currently hardcoded to use a single pd, so limit to 512 entries
+    _Static_assert(0 <= N_MIB && N_MIB <= 512);
+
+    // reset
+    memset(&pml4, 0, sizeof(pml4));
+    memset(&pdpt, 0, sizeof(pdpt));
+    memset(&pd, 0, sizeof(pd));
+    memset(&pt, 0, sizeof(pt));
+
+    // Set up PML4 -> PDPT -> PD
+    pml4.entries[0] = ((uint64_t) &pdpt) | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+    pdpt.entries[0] = ((uint64_t) &pd) | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+    pd.entries[0] = ((uint64_t) &pt) | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+
+    // Map 2MiB
+    for (size_t i = 0; i < N_MIB; i++) {
+        pd.entries[i] = ((uint64_t) &pt[i]) | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+
+        // Map 2 MiB identity mapping in PT
+        for (size_t j = 0; j < 512; j++) {
+            pt[i].entries[j] = (j * PAGE_SIZE) | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+        }
+    }
+
+    // while (1);
+
+    // Load CR3 register with new PML4
+    asm volatile(
+            "mov %0, %%cr3"
+            :
+            : "r"((uint64_t) &pml4)
+            : "memory");
+
+    parameters->pml4 = &pml4.entries[0];
+}
+
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected
  * mode.
  */
 void kernel_main(struct boot_parameters parameters) {
+    identity_map(&parameters);
     enable_serial_output();
     vga_initialize();
     uint32_t eax, ebx, ecx, edx;
@@ -60,6 +120,10 @@ void kernel_main(struct boot_parameters parameters) {
     print_vendor(ebx, ecx, edx);
 
     paging_init(parameters.pml4);
+
+    map_first_16();
+
+    uint64_t trash = (uint64_t) *((uint64_t *) (KERNEL_MAPPING_ADDRESS | 0x00200000));
 
     heap_init();
 

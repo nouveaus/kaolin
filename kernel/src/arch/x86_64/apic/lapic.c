@@ -56,12 +56,11 @@ uint32_t read_reg(void *lapicbase, uint32_t reg) {
 #define PIC1_DATA (PIC1 + 1)
 #define PIC2_DATA (PIC2 + 1)
 
-#define LAPIC_VIRTUAL_ADDRESS (KERNEL_MAPPING_ADDRESS | BASE_LAPIC)
+void *lapic = NULL;
 
 bool map_apic(void) {
-    map_page(LAPIC_VIRTUAL_ADDRESS, BASE_LAPIC,
-             PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
-    return verify_mapping(LAPIC_VIRTUAL_ADDRESS);
+    lapic = kmap_page((void *) BASE_LAPIC, PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
+    return verify_mapping(lapic);
 }
 
 void enable_apic(void) {
@@ -70,28 +69,27 @@ void enable_apic(void) {
     outb(PIC2_DATA, 0xFF);
 
     cpu_set_apic_base(cpu_get_apic_base());
-    // ! triple faults here
-    write_reg((void *) LAPIC_VIRTUAL_ADDRESS, 0xF0,
-              read_reg((void *) LAPIC_VIRTUAL_ADDRESS, 0xF0) | 0x100);
+    write_reg(lapic, 0xF0,
+              read_reg(lapic, 0xF0) | 0x100);
 }
 
 void send_apic_eoi(void) {
-    *(uint32_t volatile *) (LAPIC_VIRTUAL_ADDRESS + 0xB0) = 0;
+    *(uint32_t volatile *) ((uint64_t) lapic + 0xB0) = 0;
 }
 
 // Refer to Intel IA-32 Volume 3 12.5.4 APIC Timer
 void init_apic_timer(uint32_t initial_count, uint8_t vector) {
     // be divisble by 1 (every 10ms) (Figure 12-10)
-    *(uint32_t volatile *) (LAPIC_VIRTUAL_ADDRESS + 0x3E0) = 1011;
+    *(uint32_t volatile *) ((uint64_t) lapic + 0x3E0) = 1011;
     // set initial count (Figure 12-11)
-    *(uint32_t volatile *) (LAPIC_VIRTUAL_ADDRESS + 0x380) = initial_count;
+    *(uint32_t volatile *) ((uint64_t) lapic + 0x380) = initial_count;
 // Refer to 12.5.1 (Timer mode and vector in Figure 12-8)
 // 0 = one shot, 1 = periodic, 2 = TSC-deadline
 #define APIC_TIMER_MODE 0
-    *(uint32_t volatile *) (LAPIC_VIRTUAL_ADDRESS + 0x320) =
+    *(uint32_t volatile *) ((uint64_t) lapic + 0x320) =
             vector | (APIC_TIMER_MODE << 17);
 }
 
 uint32_t get_apic_timer_current(void) {
-    return *(uint32_t volatile *) (LAPIC_VIRTUAL_ADDRESS + 0x390);
+    return *(uint32_t volatile *) ((uint64_t) lapic + 0x390);
 }

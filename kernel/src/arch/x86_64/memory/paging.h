@@ -30,6 +30,9 @@ struct page_entry {
 #define PAGE_USER          (1ULL << 2) // CPL=3 access
 #define PAGE_CACHE_DISABLE 0x10
 
+// Maps a page in the higher-half canonical of the memory.
+void *kmap_page(void *physical_address, uint16_t flags);
+
 // kernel uses the upper address for mmio stuff
 // linux does it by  ffff800000000000 - ffffffffffffffff
 // https://www.kernel.org/doc/html/v5.8/x86/x86_64/mm.html
@@ -39,12 +42,16 @@ struct page_entry {
 void paging_init(uint64_t *pml4_address);
 
 // Frees a virtual address and frees any pages associated if it has no entries
-bool free_address(uint64_t virtual_address);
+bool free_address(void *virtual_address);
+
+// todo: change to void
+
 // Maps a physical address to a physical address with flags
-void map_page(uint64_t virtual_address,
-              uint64_t physical_address, uint16_t flags);
+void map_page(void *virtual_address,
+              void *physical_address, uint16_t flags);
+
 // Verifies that a virtual address has successfully been mapped to a physical address
-bool verify_mapping(uint64_t virtual_address);
+bool verify_mapping(void *virtual_address);
 
 // Maps pages depending on the given size
 void *mmap(void *address, size_t size, void **end_address);

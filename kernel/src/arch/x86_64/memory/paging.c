@@ -56,7 +56,7 @@ static bool check_page_is_empty(uint64_t *page) {
 
 // must invalidate tlb (https://wiki.osdev.org/TLB)
 // if any changes are made to pages
-static void invalidate_tlb(uint64_t virtual_address) {
+static void invalidate_tlb(void *virtual_address) {
     asm volatile("invlpg (%0)" ::"r"(virtual_address) : "memory");
 }
 
@@ -64,11 +64,11 @@ void paging_init(uint64_t *pml4_address) {
     pml4 = pml4_address;
 }
 
-bool free_address(uint64_t virtual_address) {
-    uint16_t pml4_offset = (virtual_address >> 39) & 0x1FF;
-    uint16_t pdpt_offset = (virtual_address >> 30) & 0x1FF;
-    uint16_t pd_offset = (virtual_address >> 21) & 0x1FF;
-    uint16_t pt_offset = (virtual_address >> 12) & 0x1FF;
+bool free_address(void *virtual_address) {
+    uint16_t pml4_offset = ((uint64_t) virtual_address >> 39) & 0x1FF;
+    uint16_t pdpt_offset = ((uint64_t) virtual_address >> 30) & 0x1FF;
+    uint16_t pd_offset = ((uint64_t) virtual_address >> 21) & 0x1FF;
+    uint16_t pt_offset = ((uint64_t) virtual_address >> 12) & 0x1FF;
 
     uint64_t *pdpt, *pd, *pt;
     if (!(pml4[pml4_offset] & PAGE_PRESENT)) return false;
@@ -92,17 +92,22 @@ bool free_address(uint64_t virtual_address) {
     invalidate_tlb(virtual_address);
 }
 
+void *kmap_page(void *physical_address, uint16_t flags) {
+    map_page((void *) (KERNEL_MAPPING_ADDRESS | (uint64_t) physical_address), physical_address, flags);
+    return (void *) (KERNEL_MAPPING_ADDRESS | (uint64_t) physical_address);
+}
+
 // Refer to 5.3.3 of AMD manual
 // ! IMPORTANT PHYSICAL ADDRESS MUST BE 4096 ALIGNED
 // ! (well, not actually that important since this code clears the lower 12 bits
 // anyways...) ! make sure flags include PAGE_PRESENT
-void map_page(uint64_t virtual_address, uint64_t physical_address,
+void map_page(void *virtual_address, void *physical_address,
               uint16_t flags) {
     // each offset is 9 bits
-    uint16_t pml4_offset = (virtual_address >> 39) & 0x1FF;
-    uint16_t pdpt_offset = (virtual_address >> 30) & 0x1FF;
-    uint16_t pd_offset = (virtual_address >> 21) & 0x1FF;
-    uint16_t pt_offset = (virtual_address >> 12) & 0x1FF;
+    uint16_t pml4_offset = ((uint64_t) virtual_address >> 39) & 0x1FF;
+    uint16_t pdpt_offset = ((uint64_t) virtual_address >> 30) & 0x1FF;
+    uint16_t pd_offset = ((uint64_t) virtual_address >> 21) & 0x1FF;
+    uint16_t pt_offset = ((uint64_t) virtual_address >> 12) & 0x1FF;
 
     // physical offset covers the 12 bits (offset from the 4096 aligned address)
     // uint16_t physical_offset = virtual_address & 0x7FF;
@@ -140,15 +145,15 @@ void map_page(uint64_t virtual_address, uint64_t physical_address,
         pt = (uint64_t *) (pd[pd_offset] & ~0xFFF);
     }
 
-    pt[pt_offset] = (physical_address & ~0xFFF) | flags;
+    pt[pt_offset] = ((uint64_t) physical_address & ~0xFFF) | flags;
     invalidate_tlb(virtual_address);
 }
 
-bool verify_mapping(uint64_t virtual_address) {
-    uint16_t pml4_offset = (virtual_address >> 39) & 0x1FF;
-    uint16_t pdpt_offset = (virtual_address >> 30) & 0x1FF;
-    uint16_t pd_offset = (virtual_address >> 21) & 0x1FF;
-    uint16_t pt_offset = (virtual_address >> 12) & 0x1FF;
+bool verify_mapping(void *virtual_address) {
+    uint16_t pml4_offset = ((uint64_t) virtual_address >> 39) & 0x1FF;
+    uint16_t pdpt_offset = ((uint64_t) virtual_address >> 30) & 0x1FF;
+    uint16_t pd_offset = ((uint64_t) virtual_address >> 21) & 0x1FF;
+    uint16_t pt_offset = ((uint64_t) virtual_address >> 12) & 0x1FF;
 
     uint64_t *pdpt, *pd, *pt;
 
@@ -180,10 +185,12 @@ bool verify_mapping(uint64_t virtual_address) {
 void *mmap(void *address, size_t size, void **end_address) {
     // divide by 0x1000 for 4096 bytes (each page takes up that)
     // add by 0xFFF to ensure 4096 alignment
+
+    // todo: make a page allocater - finds a physical memory address thats free
     size_t pages_required = (size + 0xFFF) / 0x1000;
     void *block_start = address;
     for (size_t i = 0; i < pages_required; i++) {
-        map_page(KERNEL_MAPPING_ADDRESS | (uint64_t) address, (uint64_t) address,
+        map_page((void *) (KERNEL_MAPPING_ADDRESS | (uint64_t) address), address,
                  PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
         address = (uint8_t *) address + 0x1000;
     }
@@ -200,7 +207,7 @@ void map_first_16(void) {
 
     for (int i = 0; i < N_MIB; i++) {
         for (int j = 0; j < 512; j++) {
-            map_page(KERNEL_MAPPING_ADDRESS | (j * (i + 1) * PAGE_SIZE), (uint64_t) (j * (i + 1) * PAGE_SIZE), PAGE_PRESENT | PAGE_RW | PAGE_USER);
+            kmap_page((void *) (j * (i + 1) * PAGE_SIZE), PAGE_PRESENT | PAGE_RW | PAGE_USER);
         }
     }
 }

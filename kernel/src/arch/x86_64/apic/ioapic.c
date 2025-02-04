@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+void *ioapic = NULL;
+
 uint32_t ioapic_read_reg(void *ioapicaddr, uint32_t reg) {
     uint32_t volatile *ioapic = (uint32_t volatile *) ioapicaddr;
     ioapic[0] = reg;
@@ -17,8 +19,8 @@ void ioapic_write_reg(void *ioapicaddr, uint32_t reg, uint32_t value) {
 }
 
 bool ioapic_map(void) {
-    map_page(IOAPIC_VIRTUAL_ADDRESS, IOAPICBASE, PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
-    return verify_mapping(IOAPIC_VIRTUAL_ADDRESS);
+    ioapic = kmap_page((void *) IOAPICBASE, PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
+    return verify_mapping(ioapic);
 }
 
 void ioapic_set_redirect(void *ioapicaddr, uint8_t irq, uint8_t vector, uint8_t apic_id) {

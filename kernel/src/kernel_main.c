@@ -52,14 +52,14 @@ _Noreturn void user_main(void) {
  * mode.
  */
 void kernel_main(struct boot_parameters parameters) {
+    paging_init(parameters.address_ranges);
+
     enable_serial_output();
     vga_initialize();
     uint32_t eax, ebx, ecx, edx;
     // get vendor string
     __cpuid(0, eax, ebx, ecx, edx);
     print_vendor(ebx, ecx, edx);
-
-    paging_init(parameters.pml4);
 
     heap_init();
 
@@ -79,14 +79,9 @@ void kernel_main(struct boot_parameters parameters) {
         puts("Could not map apic to virtual memory!\n");
         _die();
     }
-    krintf("pml4 address: %x\n", parameters.pml4);
+
     enable_apic();
     puts("APIC ENABLED AND MAPPED\n");
-
-    if (!ioapic_map()) {
-        puts("Could not map ioapic to virtual memory!\n");
-        _die();
-    }
 
     setup_idt();
     puts("Successfully loaded idt\n");
@@ -114,7 +109,7 @@ void kernel_main(struct boot_parameters parameters) {
         // ! DONT USE FLOATS - THEY DONT WORK FOR SOME REASON
 
         krintf("%sThe number is: %d, ticks: %d, entry count: %d\n", message, 5,
-               get_timer_ticks(), parameters.address_range_count);
+               get_timer_ticks(), parameters.address_ranges);
 
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
         //memmap_print_entries(parameters.address_range_count,
@@ -184,13 +179,14 @@ static void read_acpi(void) {
 }
 
 static void setup_idt(void) {
+    void *ioapic = ioapic_map();
     int apic_id = apic_get_id();
     krintf("APIC ID: %d\n", apic_id);
 
     // system timer
-    ioapic_set_redirect((uintptr_t *) IOAPIC_VIRTUAL_ADDRESS, 0, 0x20, apic_id);
+    ioapic_set_redirect(ioapic, 0, 0x20, apic_id);
     // keyboard
-    ioapic_set_redirect((uintptr_t *) IOAPIC_VIRTUAL_ADDRESS, 1, 0x21, apic_id);
+    ioapic_set_redirect(ioapic, 1, 0x21, apic_id);
 
     for (size_t vector = 0; vector < 32; vector++) {
         setup_interrupt_gate(vector, exception_handler, INTERRUPT_64_GATE, 0,

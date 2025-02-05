@@ -28,7 +28,7 @@ bool rsdp_find(void) {
     // Refer to 5.2.5.1 and 5.2.5.3 from ACPI Specification
     char *addr = (char *) BIOS_MEMORY_BEGIN;
     for (;
-         addr < (char *) BIOS_MEMORY_END && !cmp_signature(addr, RSDP_SIGNATURE);
+         addr < (char *) BIOS_MEMORY_END && memcmp(addr, RSDP_SIGNATURE, 8);
          addr += 16);
     rsdp = (struct rsdp *) addr;
     return addr < (char *) BIOS_MEMORY_END;
@@ -61,15 +61,14 @@ static struct rsdt *rsdt_get(void) {
     return (struct rsdt *) (uint64_t) rsdp->rsdt_address;
 }
 
+static struct rsdt *rsdt = NULL;
+
 bool rsdt_map(void) {
-    uint64_t address = (uint64_t) rsdp->rsdt_address;
-    map_page(KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
-    return verify_mapping(KERNEL_MAPPING_ADDRESS | address);
+    rsdt = kmap_page((void *) (uint64_t) rsdp->rsdt_address, PAGE_PRESENT);
+    return verify_mapping(rsdt);
 }
 
 bool rsdt_verify(void) {
-    struct rsdt *rsdt =
-            (struct rsdt *) (KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
     uint8_t sum = 0;
     for (size_t i = 0; i < rsdt->length; i++) {
         sum += ((uint8_t *) rsdt)[i];
@@ -78,8 +77,6 @@ bool rsdt_verify(void) {
 }
 
 static size_t rsdt_get_entry_count(void) {
-    struct rsdt *rsdt =
-            (struct rsdt *) (KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
     return (rsdt->length - sizeof(struct rsdt)) / sizeof(uint32_t);
 }
 
@@ -89,17 +86,12 @@ static struct madt *madt = NULL;
 
 bool madt_find(void) {
     size_t length = rsdt_get_entry_count();
-    struct rsdt *rsdt =
-            (struct rsdt *) (KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
 
     for (size_t i = 0; i < length; i++) {
-        map_page(KERNEL_MAPPING_ADDRESS | (uint64_t) rsdt->entry[i],
-                 (uint64_t) rsdt->entry[i], PAGE_PRESENT);
-
         struct description_header *description_header =
-                (struct description_header *) (KERNEL_MAPPING_ADDRESS |
-                                               (uint64_t) rsdt->entry[i]);
-        if (cmp_signature(description_header->signature, MADT_SIGNATURE)) {
+                kmap_page((void *) (uint64_t) rsdt->entry[i], PAGE_PRESENT);
+
+        if (!memcmp(description_header->signature, MADT_SIGNATURE, 4)) {
             madt = (struct madt *) (uint64_t) rsdt->entry[i];
             return true;
         }
@@ -108,10 +100,8 @@ bool madt_find(void) {
 }
 
 bool madt_map(void) {
-    uint64_t address = (uint64_t) madt;
-    map_page(KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
-    madt = (struct madt *) (KERNEL_MAPPING_ADDRESS | address);
-    return verify_mapping(KERNEL_MAPPING_ADDRESS | address);
+    madt = kmap_page(madt, PAGE_PRESENT);
+    return verify_mapping(madt);
 }
 
 bool madt_verify(void) {

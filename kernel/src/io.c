@@ -97,6 +97,7 @@ void krintf(const char *format, ...) {
                 putd(value);
                 break;
             }
+            case 'p':
             case 'x': {
                 uint64_t value = va_arg(args, uint64_t);
                 hex(value);

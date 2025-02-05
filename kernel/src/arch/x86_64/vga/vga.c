@@ -1,5 +1,7 @@
 #include "vga.h"
 
+#include "../klib/klib.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -37,17 +39,10 @@ void vga_set_color(enum vga_color fg, enum vga_color bg) {
 void vga_scroll(int lines) {
     // move the [HEIGHT - lines, HEIGHT) buffer to [0, HEIGHT - lines), then clear [lines, HEIGHT)
 
-    // todo: replace with memmove
-    //  memmove(dest, src, (VGA_HEIGHT - lines) * VGA_WIDTH * sizeof(*src));
-
     volatile uint16_t *dest = VGA_BUFFER;
     volatile uint16_t *src = &VGA_BUFFER[lines * VGA_WIDTH];
 
-    for (size_t y = lines; y < VGA_HEIGHT; y++) {
-        for (size_t x = 0; x < VGA_WIDTH; x++) {
-            *dest++ = *src++;
-        }
-    }
+    memmove((void *) dest, (void *) src, (VGA_HEIGHT - lines) * VGA_WIDTH * sizeof(*src));
 
     // final lines are cleared
     for (size_t y = VGA_HEIGHT - lines; y < VGA_HEIGHT; y++) {
@@ -65,7 +60,7 @@ void vga_putchar(char c) {
             terminal_column = 0;
 
             if (++terminal_row == VGA_HEIGHT) {
-                vga_scroll(3);
+                vga_scroll(1);
             }
 
             break;

@@ -49,6 +49,7 @@ add_executable(kernel
         src/arch/x86_64/vga/vga.c
         src/kernel_main.c
         src/io.c
+        src/memory.c
         $<TARGET_OBJECTS:drivers>
         ${KAOLIN_TESTS}
 )

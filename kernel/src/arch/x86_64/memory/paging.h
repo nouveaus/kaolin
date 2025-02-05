@@ -1,5 +1,7 @@
 #pragma once
 
+#include "memmap.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -25,26 +27,33 @@ struct page_entry {
     uint64_t nx : 1;
 } __attribute__((packed));
 
-#define PAGE_PRESENT       0x1
-#define PAGE_WRITE         0x2
-#define PAGE_USER          0x4
+#define PAGE_PRESENT       (1ULL << 0) // Present
+#define PAGE_RW            (1ULL << 1) // R/W
+#define PAGE_USER          (1ULL << 2) // CPL=3 access
 #define PAGE_CACHE_DISABLE 0x10
+
+// Maps a page in the higher-half canonical of the memory.
+void *kmap_page(void *physical_address, uint16_t flags);
 
 // kernel uses the upper address for mmio stuff
 // linux does it by  ffff800000000000 - ffffffffffffffff
 // https://www.kernel.org/doc/html/v5.8/x86/x86_64/mm.html
-#define KERNEL_MAPPING_ADDRESS 0xFFFF8000UL << 32
+#define KERNEL_MAPPING_ADDRESS (0xFFFF8000UL << 32)
 
-// Sets the global pml4 address to the give address
-void paging_init(uint64_t *pml4_address);
+// Initializes paging and takes control over CR3/PML4
+void paging_init(struct address_ranges address_ranges);
 
 // Frees a virtual address and frees any pages associated if it has no entries
-bool free_address(uint64_t virtual_address);
+bool free_address(void *virtual_address);
+
+// todo: change to void
+
 // Maps a physical address to a physical address with flags
-void map_page(uint64_t virtual_address,
-              uint64_t physical_address, uint16_t flags);
+void map_page(void *virtual_address,
+              void *physical_address, uint16_t flags);
+
 // Verifies that a virtual address has successfully been mapped to a physical address
-bool verify_mapping(uint64_t virtual_address);
+bool verify_mapping(void *virtual_address);
 
 // Maps pages depending on the given size
 void *mmap(void *address, size_t size, void **end_address);

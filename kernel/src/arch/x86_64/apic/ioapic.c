@@ -1,8 +1,9 @@
 #include "ioapic.h"
+#include "../memory/paging.h"
 
 #include <stdint.h>
 
-void *ioapic = NULL;
+#define IOAPICBASE             0xFEC00000
 
 uint32_t ioapic_read_reg(void *ioapicaddr, uint32_t reg) {
     uint32_t volatile *ioapic = (uint32_t volatile *) ioapicaddr;
@@ -18,9 +19,8 @@ void ioapic_write_reg(void *ioapicaddr, uint32_t reg, uint32_t value) {
     ioapic[4] = value;
 }
 
-bool ioapic_map(void) {
-    ioapic = kmap_page((void *) IOAPICBASE, PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
-    return verify_mapping(ioapic);
+void *ioapic_map(void) {
+    return kmap_page((void *) IOAPICBASE, PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
 }
 
 void ioapic_set_redirect(void *ioapicaddr, uint8_t irq, uint8_t vector, uint8_t apic_id) {

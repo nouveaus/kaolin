@@ -83,11 +83,6 @@ void kernel_main(struct boot_parameters parameters) {
     enable_apic();
     puts("APIC ENABLED AND MAPPED\n");
 
-    if (!ioapic_map()) {
-        puts("Could not map ioapic to virtual memory!\n");
-        _die();
-    }
-
     setup_idt();
     puts("Successfully loaded idt\n");
 
@@ -184,13 +179,14 @@ static void read_acpi(void) {
 }
 
 static void setup_idt(void) {
+    void *ioapic = ioapic_map();
     int apic_id = apic_get_id();
     krintf("APIC ID: %d\n", apic_id);
 
     // system timer
-    ioapic_set_redirect((uintptr_t *) IOAPIC_VIRTUAL_ADDRESS, 0, 0x20, apic_id);
+    ioapic_set_redirect(ioapic, 0, 0x20, apic_id);
     // keyboard
-    ioapic_set_redirect((uintptr_t *) IOAPIC_VIRTUAL_ADDRESS, 1, 0x21, apic_id);
+    ioapic_set_redirect(ioapic, 1, 0x21, apic_id);
 
     for (size_t vector = 0; vector < 32; vector++) {
         setup_interrupt_gate(vector, exception_handler, INTERRUPT_64_GATE, 0,

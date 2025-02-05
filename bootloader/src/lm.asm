@@ -64,6 +64,7 @@ init_vga:
 switch_to_lm:
 	; todo: move paging to its own file
 	pusha
+	mov	edi, paging_table_buffer
 
 	; zero out 16kib buffer for 4 page tables
 	push	di

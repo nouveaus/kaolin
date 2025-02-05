@@ -1,5 +1,7 @@
 #pragma once
 
+#include "memmap.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -36,10 +38,10 @@ void *kmap_page(void *physical_address, uint16_t flags);
 // kernel uses the upper address for mmio stuff
 // linux does it by  ffff800000000000 - ffffffffffffffff
 // https://www.kernel.org/doc/html/v5.8/x86/x86_64/mm.html
-#define KERNEL_MAPPING_ADDRESS 0xFFFF8000UL << 32
+#define KERNEL_MAPPING_ADDRESS (0xFFFF8000UL << 32)
 
-// Sets the global pml4 address to the give address
-void paging_init(uint64_t *pml4_address);
+// Initializes paging and takes control over CR3/PML4
+void paging_init(struct address_ranges address_ranges);
 
 // Frees a virtual address and frees any pages associated if it has no entries
 bool free_address(void *virtual_address);
@@ -55,6 +57,3 @@ bool verify_mapping(void *virtual_address);
 
 // Maps pages depending on the given size
 void *mmap(void *address, size_t size, void **end_address);
-
-// Maps the first 16 mib to higher kernel
-void map_first_16(void);

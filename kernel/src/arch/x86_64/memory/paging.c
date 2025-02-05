@@ -1,12 +1,14 @@
 #include "paging.h"
 
-#define PAGE_SIZE 4096
+#include "../klib/klib.h"
+
+// Each table has 512 entries (4KB pages in 64-bit mode)
+#define PAGE_SIZE 0x1000
+
 // technically we have MAX_PAGES + 4 because the + 4 was made in bootloader
 #define MAX_PAGES             4096
 #define PHYSICAL_MEMORY_START 0x00100000
 #define MAX_PAGE_ENTRIES      512
-
-static uint64_t *pml4;
 
 // Inspired by https://wiki.osdev.org/Page_Frame_Allocation (bitmap)
 // this keeps track of what page is being used
@@ -60,8 +62,51 @@ static void invalidate_tlb(void *virtual_address) {
     asm volatile("invlpg (%0)" ::"r"(virtual_address) : "memory");
 }
 
-void paging_init(uint64_t *pml4_address) {
-    pml4 = pml4_address;
+// How many first 2 MiB to identity map
+#define N_MIB 0x08
+
+typedef struct {
+    uint64_t entries[512];
+} __attribute__((aligned(0x1000))) table;
+
+static table pml4;
+static table pdpt;
+static table pd;
+static table pt[N_MIB];
+
+void paging_init(struct address_ranges address_ranges) {
+    // currently hardcoded to use a single pd, so limit to 512 entries
+    _Static_assert(0 <= N_MIB && N_MIB <= 512);
+
+    // reset
+    memset(&pml4, 0, sizeof(pml4));
+    memset(&pdpt, 0, sizeof(pdpt));
+    memset(&pd, 0, sizeof(pd));
+    memset(&pt, 0, sizeof(pt));
+
+    // Set up PML4 -> PDPT -> PD
+    pml4.entries[0] = ((uint64_t) &pdpt) | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+    pdpt.entries[0] = ((uint64_t) &pd) | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+    pd.entries[0] = ((uint64_t) &pt) | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+
+    // Map 2MiB
+    for (size_t i = 0; i < N_MIB; i++) {
+        pd.entries[i] = ((uint64_t) &pt[i]) | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+
+        // Map 2 MiB identity mapping in PT
+        for (size_t j = 0; j < 512; j++) {
+            pt[i].entries[j] = (j * PAGE_SIZE) | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+        }
+    }
+
+    // Load CR3 register with new PML4
+    asm volatile(
+            "mov %0, %%cr3"
+            :
+            : "r"((uint64_t) &pml4)
+            : "memory");
+
+    // todo: identity map E820 regions
 }
 
 bool free_address(void *virtual_address) {
@@ -71,8 +116,8 @@ bool free_address(void *virtual_address) {
     uint16_t pt_offset = ((uint64_t) virtual_address >> 12) & 0x1FF;
 
     uint64_t *pdpt, *pd, *pt;
-    if (!(pml4[pml4_offset] & PAGE_PRESENT)) return false;
-    pdpt = (uint64_t *) (pml4[pml4_offset] & ~0xFFF);
+    if (!(pml4.entries[pml4_offset] & PAGE_PRESENT)) return false;
+    pdpt = (uint64_t *) (pml4.entries[pml4_offset] & ~0xFFF);
     if (!(pdpt[pdpt_offset] & PAGE_PRESENT)) return false;
     pd = (uint64_t *) (pdpt[pdpt_offset] & ~0xFFF);
     if (!(pd[pd_offset] & PAGE_PRESENT)) return false;
@@ -86,7 +131,7 @@ bool free_address(void *virtual_address) {
         pdpt[pdpt_offset] = 0;
     }
     if (check_page_is_empty(pdpt)) {
-        pml4[pml4_offset] = 0;
+        pml4.entries[pml4_offset] = 0;
     }
 
     invalidate_tlb(virtual_address);
@@ -117,16 +162,16 @@ void map_page(void *virtual_address, void *physical_address,
     // we do address & (~0xFFF) because first 12 bits are flags
     // refer to Figure 5-19 (5.3.3) in amd manual as example
     uint64_t *pdpt, *pd, *pt;
-    if (!(pml4[pml4_offset] & PAGE_PRESENT)) {
+    if (!(pml4.entries[pml4_offset] & PAGE_PRESENT)) {
         pdpt = allocate_page();
         // todo: do something if null is returned
         clear_page((uint8_t *) pdpt);
 
         // must & ~0xfff usually first 12 bits are zero
         // because the tables are 4096 aligned (we might not need it?)
-        pml4[pml4_offset] = ((uint64_t) pdpt & ~0xFFF) | flags;
+        pml4.entries[pml4_offset] = ((uint64_t) pdpt & ~0xFFF) | flags;
     } else {
-        pdpt = (uint64_t *) (pml4[pml4_offset] & ~0xFFF);
+        pdpt = (uint64_t *) (pml4.entries[pml4_offset] & ~0xFFF);
     }
 
     if (!(pdpt[pdpt_offset] & PAGE_PRESENT)) {
@@ -157,11 +202,11 @@ bool verify_mapping(void *virtual_address) {
 
     uint64_t *pdpt, *pd, *pt;
 
-    if (!(pml4[pml4_offset] & PAGE_PRESENT)) {
+    if (!(pml4.entries[pml4_offset] & PAGE_PRESENT)) {
         return false;
     }
 
-    pdpt = (uint64_t *) (pml4[pml4_offset] & ~0xFFF);
+    pdpt = (uint64_t *) (pml4.entries[pml4_offset] & ~0xFFF);
 
     if (!(pdpt[pdpt_offset] & PAGE_PRESENT)) {
         return false;
@@ -198,16 +243,4 @@ void *mmap(void *address, size_t size, void **end_address) {
     if (end_address != NULL) *end_address = address;
 
     return (void *) (KERNEL_MAPPING_ADDRESS | (uint64_t) block_start);
-}
-
-// 16 mib
-#define N_MIB 0x10
-
-void map_first_16(void) {
-
-    for (int i = 0; i < N_MIB; i++) {
-        for (int j = 0; j < 512; j++) {
-            kmap_page((void *) (j * (i + 1) * PAGE_SIZE), PAGE_PRESENT | PAGE_RW | PAGE_USER);
-        }
-    }
 }

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define IOAPICBASE             0xFEC00000
+#define IOAPICBASE 0xFEC00000
 
 uint32_t ioapic_read_reg(void *ioapicaddr, uint32_t reg) {
     uint32_t volatile *ioapic = (uint32_t volatile *) ioapicaddr;

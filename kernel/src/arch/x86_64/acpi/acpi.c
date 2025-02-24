@@ -68,6 +68,16 @@ bool rsdt_map(void) {
     return verify_mapping(rsdt);
 }
 
+static bool rsdt_entry_verify(void *entry) {
+    uint8_t sum = 0;
+    struct description_header *header = (struct description_header *) entry;
+    uint8_t *addr = (uint8_t *) entry;
+    for (size_t i = 0; i < header->length; i++) {
+        sum += addr[i];
+    }
+    return !sum;
+}
+
 bool rsdt_verify(void) {
     uint8_t sum = 0;
     for (size_t i = 0; i < rsdt->length; i++) {
@@ -84,19 +94,18 @@ static size_t rsdt_get_entry_count(void) {
 
 static struct madt *madt = NULL;
 
-bool madt_find(void) {
+static void *rsdt_get_entry(char *signature) {
     size_t length = rsdt_get_entry_count();
 
     for (size_t i = 0; i < length; i++) {
         struct description_header *description_header =
                 kmap_page((void *) (uint64_t) rsdt->entry[i], PAGE_PRESENT);
 
-        if (!memcmp(description_header->signature, MADT_SIGNATURE, 4)) {
-            madt = (struct madt *) (uint64_t) rsdt->entry[i];
-            return true;
+        if (!memcmp(description_header->signature, signature, 4)) {
+            return (struct madt *) (uint64_t) rsdt->entry[i];
         }
     }
-    return false;
+    return NULL;
 }
 
 bool madt_map(void) {
@@ -113,6 +122,12 @@ bool madt_verify(void) {
     return !sum;
 }
 
+
+bool madt_find(void) {
+    madt = rsdt_get_entry(MADT_SIGNATURE);
+    return madt != NULL;
+}
+
 uint32_t madt_get_lapic_address(void) {
     return madt->local_interrupt_controller_address;
 }
@@ -121,6 +136,8 @@ static struct madt_entry **madt_entries = NULL;
 static size_t max_madt_entries = 0;
 
 size_t ioapic_count_entries(void) {
+    if (madt_entries != NULL) return max_madt_entries;
+
     // all entries are after madt
     struct madt_entry *madt_entry =
             (struct madt_entry *) ((uint8_t *) madt + sizeof(struct madt));
@@ -145,4 +162,43 @@ size_t ioapic_count_entries(void) {
 
 struct madt_entry **get_madt_entries(void) {
     return madt_entries;
+}
+
+#define MCFG_SIGNATURE "MCFG"
+
+static struct mcfg *mcfg = NULL;
+
+bool mcfg_find(void) {
+    mcfg = rsdt_get_entry(MCFG_SIGNATURE);
+    return mcfg != NULL;
+}
+
+bool mcfg_verify(void) {
+    return rsdt_entry_verify(mcfg);
+}
+
+bool mcfg_map(void) {
+    mcfg = kmap_page(mcfg, PAGE_PRESENT);
+    return verify_mapping(mcfg);
+}
+
+static struct mcfg_entry **mcfg_entries = NULL;
+static size_t max_mcfg_entries = 0;
+
+size_t mcfg_count_entries(void) {
+    if (mcfg_entries != NULL) return max_madt_entries;
+
+    struct mcfg_entry *mcfg_entry =
+            (struct mcfg_entry *) ((uint8_t *) mcfg + sizeof(struct mcfg));
+
+    uint8_t *end = (uint8_t *) mcfg + mcfg->length;
+    max_mcfg_entries = (end - (uint8_t *) mcfg_entry) / sizeof(struct mcfg_entry);
+
+    mcfg_entries = kmalloc(sizeof(*mcfg_entries) * max_mcfg_entries);
+
+    for (size_t i = 0; (uint8_t *) mcfg_entry < end; i++) {
+        mcfg_entries[i] = mcfg_entry;
+        mcfg_entry = (struct mcfg_entry *) ((uint8_t *) mcfg_entry + sizeof(struct mcfg_entry));
+    }
+    return max_madt_entries;
 }

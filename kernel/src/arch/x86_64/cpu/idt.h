@@ -24,6 +24,6 @@ enum gate_type {
     TRAP_64_GATE = 0xF
 };
 
-void setup_interrupt_gate(uint32_t irq, void *base, enum gate_type type, uint8_t privilege_level, uint8_t ist);
+void setup_interrupt_gate(uint32_t vector, void *base, enum gate_type type, uint8_t privilege_level, uint8_t ist);
 
 void load_idt(void);

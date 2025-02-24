@@ -1,10 +1,10 @@
 #include "klib.h"
 
-#include "../apic/lapic.h"
+#include "../drivers/timer/timer.h"
 
 void ksleep(int ticks) {
-    init_apic_timer(ticks, 0x20);
-    while (get_apic_timer_current());
+    apic_timer_init(ticks, 0x20);
+    while (apic_timer_get_current());
 }
 
 _Noreturn void _die(void) {

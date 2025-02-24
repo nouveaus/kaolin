@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "../memory/paging.h"
+
 // Checks whether apic is supported
 bool apic_is_supported(void);
 
@@ -24,8 +26,5 @@ void write_reg(void *ioapicaddr, uint32_t reg, uint32_t value);
 // Signal end of interrupt to apic
 void send_apic_eoi(void);
 
-// Initialises the apic timer
-void init_apic_timer(uint32_t initial_count, uint8_t vector);
-
-// Get the current count of apic timer
-uint32_t get_apic_timer_current(void);
+// Get apic address
+void *apic_get_address(void);

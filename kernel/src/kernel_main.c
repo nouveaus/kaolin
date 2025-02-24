@@ -9,6 +9,9 @@
 #include "arch/x86_64/cpu/idt.h"
 #include "arch/x86_64/cpu/msr.h"
 #include "arch/x86_64/drivers/keyboard/keyboard.h"
+#include "arch/x86_64/drivers/mouse/mouse.h"
+#include "arch/x86_64/drivers/pci/pci.h"
+#include "arch/x86_64/drivers/speaker/speaker.h"
 #include "arch/x86_64/drivers/timer/timer.h"
 #include "arch/x86_64/klib/klib.h"
 #include "arch/x86_64/memory/paging.h"
@@ -45,6 +48,22 @@ _Noreturn void user_main(void) {
     while (1) {
         user_puts(msg);
     }
+}
+
+/* int melody[] = {
+        100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100};
+*/
+int melody[] = {
+        250, 250, 450, 250, 550, 150, 100, 50, 100, 200, 100};
+
+void play_startup() {
+    int length = sizeof(melody) / sizeof(melody[0]);
+    for (int i = 0; i < length; i++) {
+        krintf("Playing %d ", melody[i]);
+        beep(melody[i]);
+        ksleep(276447232 / 5);
+    }
+    putc('\n');
 }
 
 /*
@@ -100,23 +119,48 @@ void kernel_main(struct boot_parameters parameters) {
     outw(0xf4, 0x10);
     _die();
 #else
+    puts("Enter a character: ");
+    char c = getc();
+    krintf("Char: %c\n", c);
+
+
+    // ear candy
+    for (int i = 1000; i < 100000; i += 1000) {
+        beep(i);
+        ksleep(100000);
+    }
+
+
+    puts("Enter a string: ");
+    char *str = kmalloc(10);
+    str[getstr(str, 9)] = '\0';
+    play_startup();
+    krintf("String: %s\n", str);
+    free(str);
+
+    pci_scan();
+    puts("Finished scanning for PCI devices\n");
+    getc();
+
     char message[] = "X Hello world!\n";
 
-    for (size_t i = 0; i < 1; i++) {
+    for (size_t i = 0; i < 5; i++) {
         message[0] = '0' + i;
         i = (i + 1) % 10;
 
         // ! DONT USE FLOATS - THEY DONT WORK FOR SOME REASON
 
         krintf("%sThe number is: %d, ticks: %d, entry count: %d\n", message, 5,
-               get_timer_ticks(), parameters.address_ranges);
+               apic_timer_get_ticks(), parameters.address_ranges);
 
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
         //memmap_print_entries(parameters.address_range_count,
         //                     parameters.address_ranges);
         //
 
-        ksleep(276447232);
+        pleep(3000);
+
+        //ksleep(276447232);
     }
     enter_usermode(user_main);
 #endif
@@ -176,6 +220,16 @@ static void read_acpi(void) {
             krintf("APICIO address: %x\n", apicio_entry->ioapic_address);
         }
     }
+
+    // Currently I don't know how to get pcie
+    // working with the qemu so we are falling back to pci
+    /*
+    if (!mcfg_find()) {
+        puts("Could not find mcfg\n");
+        _die();
+    }
+    puts("Found mcfg\n");
+    */
 }
 
 static void setup_idt(void) {
@@ -183,20 +237,23 @@ static void setup_idt(void) {
     int apic_id = apic_get_id();
     krintf("APIC ID: %d\n", apic_id);
 
-    // system timer
-    ioapic_set_redirect(ioapic, 0, 0x20, apic_id);
-    // keyboard
-    ioapic_set_redirect(ioapic, 1, 0x21, apic_id);
-
     for (size_t vector = 0; vector < 32; vector++) {
         setup_interrupt_gate(vector, exception_handler, INTERRUPT_64_GATE, 0,
                              0);
     }
 
     // we have interrupt after 31 since 0-31 are reserved for errors
-    setup_interrupt_gate(0x20, timer_handler, INTERRUPT_64_GATE, 0, 0);
-    setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_64_GATE, 0, 0);
-    setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 3, 1);
+    setup_interrupt_gate(0x20, apic_timer_handler, INTERRUPT_64_GATE, 0, 0);
+    //setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_64_GATE, 0, 0);
 
+    // PIT
+    ioapic_set_redirect(ioapic, 0, 0x23, apic_id);
+
+    pit_init(3200);
+    setup_interrupt_gate(0x23, pit_handler, INTERRUPT_64_GATE, 0, 0);
+
+    setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 3, 1);
+    keyboard_init(ioapic);
+    mouse_init(ioapic);
     load_idt();
 }

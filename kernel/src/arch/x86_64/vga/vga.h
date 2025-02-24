@@ -36,3 +36,12 @@ void vga_putchar(char c);
 
 // Prints a null-terminated string
 void vga_write_string(const char *data);
+
+// Enables text cursor
+void vga_cursor_enable(size_t start, size_t end);
+
+// Disables text cursor
+void vga_cursor_disable(void);
+
+// Updates text cursor
+void vga_cursor_update(size_t x, size_t y);

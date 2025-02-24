@@ -67,6 +67,23 @@ struct madt_entry_apicio {
     uint32_t global_system_interrupt_base;
 } __attribute__((packed));
 
+struct mcfg_entry {
+    uint64_t address;
+    // PCI segment group number
+    uint16_t pci_group;
+    uint8_t start_PCI_bus;
+    uint8_t end_PCI_bus;
+    uint32_t reserved;
+} __attribute__((packed));
+
+// from here: https://wiki.osdev.org/PCI_Express
+// not specified in ACPI spec (probs needs to find it in pcie spec)
+struct mcfg {
+    DESCRIPTION_HEADER
+    uint8_t reserved[8];
+    struct mcfg_entry data[];
+} __attribute__((packed));
+
 // Finds the rsdp and sets the address
 bool rsdp_find(void);
 
@@ -102,3 +119,15 @@ size_t ioapic_count_entries(void);
 
 // Returns a array of addresses to madts
 struct madt_entry **get_madt_entries(void);
+
+// Finds the mcfg 
+bool mcfg_find(void);
+
+// Verifies the mcfg
+bool mcfg_verify(void);
+
+// Maps the mcfg to a virtual memory address
+bool mcfg_map(void);
+
+// Counts the entries of the mcfg
+size_t mcfg_count_entries(void);

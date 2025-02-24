@@ -5,9 +5,6 @@
 
 #include "../memory/paging.h"
 
-#define BASE_LAPIC            0xFEE00000
-#define LAPIC_VIRTUAL_ADDRESS (KERNEL_MAPPING_ADDRESS | BASE_LAPIC)
-
 // Checks whether apic is supported
 bool apic_is_supported(void);
 
@@ -29,3 +26,5 @@ void write_reg(void *ioapicaddr, uint32_t reg, uint32_t value);
 // Signal end of interrupt to apic
 void send_apic_eoi(void);
 
+// Get apic address
+void *apic_get_address(void);

@@ -36,10 +36,6 @@ boot_kernel:
 	mov	rax, [mmap_buf]
 	push	rax
 
-;	void *paging_table
-	mov	rax, paging_table_buffer
-	push	rax
-
 ;	finally enter the kernel in 32-bit protected mode
 	call	[kernel_entry]
 

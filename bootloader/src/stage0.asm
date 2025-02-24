@@ -42,9 +42,6 @@
 	call	cpuid_avaliability
 
 	call	init_vga
-
-	mov	edi, paging_table_buffer
-
 	call	switch_to_lm
 
 

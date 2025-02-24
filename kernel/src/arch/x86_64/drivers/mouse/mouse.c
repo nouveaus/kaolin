@@ -28,7 +28,7 @@ static uint8_t y_movement = 0;
 static __attribute__((interrupt)) void mouse_handler(struct interrupt_frame *frame);
 static void wait_mouse(bool is_output);
 
-void mouse_init(void) {
+void mouse_init(void* ioapic) {
     // enable mouse
     wait_mouse(true);
     outb(COMMAND_REGISTER, 0xA8);
@@ -63,7 +63,7 @@ void mouse_init(void) {
     outb(DATA_PORT, 0xF4);
 
     int apic_id = apic_get_id();
-    ioapic_set_redirect((uintptr_t *) IOAPIC_VIRTUAL_ADDRESS, 12, 0x22, apic_id);
+    ioapic_set_redirect((uintptr_t *) ioapic, 12, 0x22, apic_id);
     setup_interrupt_gate(0x22, mouse_handler, INTERRUPT_64_GATE, 0, 0);
 }
 

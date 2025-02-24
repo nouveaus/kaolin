@@ -28,7 +28,7 @@ bool rsdp_find(void) {
     // Refer to 5.2.5.1 and 5.2.5.3 from ACPI Specification
     char *addr = (char *) BIOS_MEMORY_BEGIN;
     for (;
-         addr < (char *) BIOS_MEMORY_END && !cmp_signature(addr, RSDP_SIGNATURE);
+         addr < (char *) BIOS_MEMORY_END && memcmp(addr, RSDP_SIGNATURE, 8);
          addr += 16);
     rsdp = (struct rsdp *) addr;
     return addr < (char *) BIOS_MEMORY_END;
@@ -61,10 +61,11 @@ static struct rsdt *rsdt_get(void) {
     return (struct rsdt *) (uint64_t) rsdp->rsdt_address;
 }
 
+static struct rsdt *rsdt = NULL;
+
 bool rsdt_map(void) {
-    uint64_t address = (uint64_t) rsdp->rsdt_address;
-    map_page(KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
-    return verify_mapping(KERNEL_MAPPING_ADDRESS | address);
+    rsdt = kmap_page((void *) (uint64_t) rsdp->rsdt_address, PAGE_PRESENT);
+    return verify_mapping(rsdt);
 }
 
 static bool rsdt_entry_verify(void *entry) {
@@ -78,55 +79,53 @@ static bool rsdt_entry_verify(void *entry) {
 }
 
 bool rsdt_verify(void) {
-    struct rsdt *rsdt =
-            (struct rsdt *) (KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
-    return rsdt_entry_verify(rsdt);
+    uint8_t sum = 0;
+    for (size_t i = 0; i < rsdt->length; i++) {
+        sum += ((uint8_t *) rsdt)[i];
+    }
+    return !sum;
 }
 
 static size_t rsdt_get_entry_count(void) {
-    struct rsdt *rsdt =
-            (struct rsdt *) (KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
     return (rsdt->length - sizeof(struct rsdt)) / sizeof(uint32_t);
-}
-
-static void *rsdt_get_entry(char *signature) {
-    size_t length = rsdt_get_entry_count();
-    struct rsdt *rsdt =
-            (struct rsdt *) (KERNEL_MAPPING_ADDRESS | rsdp->rsdt_address);
-
-    for (size_t i = 0; i < length; i++) {
-        // todo: pre map
-        map_page(KERNEL_MAPPING_ADDRESS | (uint64_t) rsdt->entry[i],
-                 (uint64_t) rsdt->entry[i], PAGE_PRESENT);
-
-        struct description_header *description_header =
-                (struct description_header *) (KERNEL_MAPPING_ADDRESS |
-                                               (uint64_t) rsdt->entry[i]);
-        if (cmp_signature(description_header->signature, signature)) {
-            return (void *) rsdt->entry[i];
-        }
-    }
-    return NULL;
 }
 
 #define MADT_SIGNATURE "APIC"
 
 static struct madt *madt = NULL;
 
-bool madt_find(void) {
-    madt = rsdt_get_entry(MADT_SIGNATURE);
-    return madt != NULL;
-}
+static void *rsdt_get_entry(char *signature) {
+    size_t length = rsdt_get_entry_count();
 
-bool madt_verify(void) {
-    return rsdt_entry_verify(madt);
+    for (size_t i = 0; i < length; i++) {
+        struct description_header *description_header =
+                kmap_page((void *) (uint64_t) rsdt->entry[i], PAGE_PRESENT);
+
+        if (!memcmp(description_header->signature, signature, 4)) {
+            return (struct madt *) (uint64_t) rsdt->entry[i];
+        }
+    }
+    return NULL;
 }
 
 bool madt_map(void) {
-    uint64_t address = (uint64_t) madt;
-    map_page(KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
-    madt = (struct madt *) (KERNEL_MAPPING_ADDRESS | address);
-    return verify_mapping(KERNEL_MAPPING_ADDRESS | address);
+    madt = kmap_page(madt, PAGE_PRESENT);
+    return verify_mapping(madt);
+}
+
+bool madt_verify(void) {
+    uint8_t sum = 0;
+    uint8_t *addr = (uint8_t *) madt;
+    for (size_t i = 0; i < madt->length; i++) {
+        sum += addr[i];
+    }
+    return !sum;
+}
+
+
+bool madt_find(void) {
+    madt = rsdt_get_entry(MADT_SIGNATURE);
+    return madt != NULL;
 }
 
 uint32_t madt_get_lapic_address(void) {
@@ -179,10 +178,8 @@ bool mcfg_verify(void) {
 }
 
 bool mcfg_map(void) {
-    uint64_t address = (uint64_t) mcfg;
-    map_page(KERNEL_MAPPING_ADDRESS | address, address, PAGE_PRESENT);
-    mcfg = (struct mcfg *) (KERNEL_MAPPING_ADDRESS | address);
-    return verify_mapping(KERNEL_MAPPING_ADDRESS | address);
+    mcfg = kmap_page(mcfg, PAGE_PRESENT);
+    return verify_mapping(mcfg);
 }
 
 static struct mcfg_entry **mcfg_entries = NULL;

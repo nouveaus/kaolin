@@ -12,7 +12,10 @@ struct address_range_descriptor {
     uint32_t extended_attributes;
 };
 
+struct address_ranges {
+    uint32_t count;
+    struct address_range_descriptor *entries;
+};
+
 // Prints all the entries of the memory map
-void memmap_print_entries(
-        uint32_t entry_count,
-        struct address_range_descriptor address_range_descriptor[]);
+void memmap_print_entries(struct address_ranges address_ranges);

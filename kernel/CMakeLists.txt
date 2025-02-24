@@ -8,15 +8,15 @@ set(COMPILE_OPTIONS
         -mno-red-zone           # Required for x86_64
         -ffunction-sections
         -fdata-sections
-        -O1
-        -g
 )
 
 add_library(drivers OBJECT
         src/arch/x86_64/drivers/keyboard/keyboard.c
         src/arch/x86_64/drivers/mouse/mouse.c
         src/arch/x86_64/drivers/pci/pci.c
+        src/arch/x86_64/drivers/speaker/speaker.c
         src/arch/x86_64/drivers/timer/apic.c
+        src/arch/x86_64/drivers/timer/pit.c
         src/arch/x86_64/klib/trap.c
 )
 
@@ -53,6 +53,7 @@ add_executable(kernel
         src/arch/x86_64/vga/vga.c
         src/kernel_main.c
         src/io.c
+        src/memory.c
         $<TARGET_OBJECTS:drivers>
         ${KAOLIN_TESTS}
 )

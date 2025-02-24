@@ -102,4 +102,4 @@ struct gdt {
 } __attribute__((packed));
 
 // Enters usermode
-void _Noreturn enter_usermode(void *function_address);
+_Noreturn void enter_usermode(void (*function)(void));

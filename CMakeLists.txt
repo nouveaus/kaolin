@@ -17,6 +17,7 @@ add_custom_command(
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/bind_kernel.py
                 "bootloader/boot.bin"
                 $<TARGET_FILE:kernel>
+                ${CMAKE_CURRENT_SOURCE_DIR}/kernel/src/x86_64.ld
         COMMENT "Link bootloader with kernel image"
 )
 
@@ -31,6 +32,8 @@ add_custom_target(run
                 -device isa-debug-exit,iobase=0xf4,iosize=0x04
                 -netdev user,id=net0
                 -device virtio-net-pci,netdev=net0
+                -audiodev pa,id=speaker
+                -machine pcspk-audiodev=speaker
                 -d int
                 -D qemu.log
         DEPENDS os)

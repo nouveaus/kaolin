@@ -78,14 +78,14 @@ static bool shift_pressed = false;
 // todo: poll for keyboard status
 // todo: check keyboard type (1, 2, 3)
 
-void keyboard_init(void) {
+void keyboard_init(void *ioapic) {
     // Disable any devices connected to ps/2 ports
     //outb(0x64, 0xAD);
     //outb(0x64, 0xA7);
     // todo: do the steps specified by osdev later
 
     int apic_id = apic_get_id();
-    ioapic_set_redirect((uintptr_t *) IOAPIC_VIRTUAL_ADDRESS, 1, 0x21, apic_id);
+    ioapic_set_redirect((uintptr_t *) ioapic, 1, 0x21, apic_id);
     setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_64_GATE, 0, 0);
 }
 

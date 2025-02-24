@@ -48,15 +48,18 @@ uint32_t read_reg(void *lapicbase, uint32_t reg) {
     return lapic[reg];
 }
 
+#define BASE_LAPIC 0xFEE00000
+
 #define PIC1      0x20 /* IO base address for master PIC */
 #define PIC2      0xA0 /* IO base address for slave PIC */
 #define PIC1_DATA (PIC1 + 1)
 #define PIC2_DATA (PIC2 + 1)
 
+void *lapic = NULL;
+
 bool map_apic(void) {
-    map_page(LAPIC_VIRTUAL_ADDRESS, BASE_LAPIC,
-             PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
-    return verify_mapping(LAPIC_VIRTUAL_ADDRESS);
+    lapic = kmap_page((void *) BASE_LAPIC, PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
+    return verify_mapping(lapic);
 }
 
 void enable_apic(void) {
@@ -65,11 +68,14 @@ void enable_apic(void) {
     outb(PIC2_DATA, 0xFF);
 
     cpu_set_apic_base(cpu_get_apic_base());
-    // ! triple faults here
-    write_reg((void *) LAPIC_VIRTUAL_ADDRESS, 0xF0,
-              read_reg((void *) LAPIC_VIRTUAL_ADDRESS, 0xF0) | 0x100);
+    write_reg(lapic, 0xF0,
+              read_reg(lapic, 0xF0) | 0x100);
 }
 
 void send_apic_eoi(void) {
-    *(uint32_t volatile *) (LAPIC_VIRTUAL_ADDRESS + 0xB0) = 0;
+    *(uint32_t volatile *) ((uint64_t) lapic + 0xB0) = 0;
+}
+
+void *apic_get_address(void) {
+    return lapic;
 }

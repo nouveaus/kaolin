@@ -11,6 +11,7 @@
 #include "arch/x86_64/drivers/keyboard/keyboard.h"
 #include "arch/x86_64/drivers/mouse/mouse.h"
 #include "arch/x86_64/drivers/pci/pci.h"
+#include "arch/x86_64/drivers/speaker/speaker.h"
 #include "arch/x86_64/drivers/timer/timer.h"
 #include "arch/x86_64/klib/klib.h"
 #include "arch/x86_64/memory/paging.h"
@@ -30,29 +31,54 @@ static void read_acpi(void);
 
 static void setup_idt(void);
 
-void _Noreturn user_main(void) {
-    const char *msg = "Entered usermode!\n";
+void user_puts(const char *s) {
+    register uint64_t syscall asm("rax") = 0;
+    register const char *input asm("rdi") = s;
+
     asm volatile(
-            "mov %0, %%rax\n"
-            "mov %1, %%rdi\n"
-            "int %2"
-            : : "r"((unsigned long) 0), "r"(msg), "i"(0x80) : "memory");
-    while (1);
+            "int $0x80"
+            :
+            : "r"(syscall), "r"(input)
+            :);
+}
+
+_Noreturn void user_main(void) {
+    const char *msg = "Entered usermode!\n";
+
+    while (1) {
+        user_puts(msg);
+    }
+}
+
+/* int melody[] = {
+        100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100};
+*/
+int melody[] = {
+        250, 250, 450, 250, 550, 150, 100, 50, 100, 200, 100};
+
+void play_startup() {
+    int length = sizeof(melody) / sizeof(melody[0]);
+    for (int i = 0; i < length; i++) {
+        krintf("Playing %d ", melody[i]);
+        beep(melody[i]);
+        ksleep(276447232 / 5);
+    }
+    putc('\n');
 }
 
 /*
  * The entry point after the bootloader finishes setting up x86 32-bit protected
  * mode.
  */
-void _Noreturn kernel_main(struct boot_parameters parameters) {
+void kernel_main(struct boot_parameters parameters) {
+    paging_init(parameters.address_ranges);
+
     enable_serial_output();
     vga_initialize();
     uint32_t eax, ebx, ecx, edx;
     // get vendor string
     __cpuid(0, eax, ebx, ecx, edx);
     print_vendor(ebx, ecx, edx);
-
-    paging_init(parameters.pml4);
 
     heap_init();
 
@@ -72,14 +98,9 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
         puts("Could not map apic to virtual memory!\n");
         _die();
     }
-    krintf("pml4 address: %x\n", parameters.pml4);
+
     enable_apic();
     puts("APIC ENABLED AND MAPPED\n");
-
-    if (!ioapic_map()) {
-        puts("Could not map ioapic to virtual memory!\n");
-        _die();
-    }
 
     setup_idt();
     puts("Successfully loaded idt\n");
@@ -102,9 +123,18 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     char c = getc();
     krintf("Char: %c\n", c);
 
+
+    // ear candy
+    for (int i = 1000; i < 100000; i += 1000) {
+        beep(i);
+        ksleep(100000);
+    }
+
+
     puts("Enter a string: ");
     char *str = kmalloc(10);
     str[getstr(str, 9)] = '\0';
+    play_startup();
     krintf("String: %s\n", str);
     free(str);
 
@@ -121,16 +151,18 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
         // ! DONT USE FLOATS - THEY DONT WORK FOR SOME REASON
 
         krintf("%sThe number is: %d, ticks: %d, entry count: %d\n", message, 5,
-               apic_timer_get_ticks(), parameters.address_range_count);
+               apic_timer_get_ticks(), parameters.address_ranges);
 
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
         //memmap_print_entries(parameters.address_range_count,
         //                     parameters.address_ranges);
         //
 
-        ksleep(276447232);
+        pleep(3000);
+
+        //ksleep(276447232);
     }
-    enter_usermode((void *) user_main);
+    enter_usermode(user_main);
 #endif
 }
 
@@ -201,11 +233,9 @@ static void read_acpi(void) {
 }
 
 static void setup_idt(void) {
+    void *ioapic = ioapic_map();
     int apic_id = apic_get_id();
     krintf("APIC ID: %d\n", apic_id);
-
-    // system timer
-    ioapic_set_redirect((uintptr_t *) IOAPIC_VIRTUAL_ADDRESS, 0, 0x20, apic_id);
 
     for (size_t vector = 0; vector < 32; vector++) {
         setup_interrupt_gate(vector, exception_handler, INTERRUPT_64_GATE, 0,
@@ -213,11 +243,17 @@ static void setup_idt(void) {
     }
 
     // we have interrupt after 31 since 0-31 are reserved for errors
-    setup_interrupt_gate(0x20, timer_handler, INTERRUPT_64_GATE, 0, 0);
-    keyboard_init();
-    // as of now mouse breaks keyboard and it doesnt work
-    mouse_init();
-    setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 3, 0);
+    setup_interrupt_gate(0x20, apic_timer_handler, INTERRUPT_64_GATE, 0, 0);
+    //setup_interrupt_gate(0x21, keyboard_handler, INTERRUPT_64_GATE, 0, 0);
 
+    // PIT
+    ioapic_set_redirect(ioapic, 0, 0x23, apic_id);
+
+    pit_init(3200);
+    setup_interrupt_gate(0x23, pit_handler, INTERRUPT_64_GATE, 0, 0);
+
+    setup_interrupt_gate(0x80, trap, TRAP_64_GATE, 3, 1);
+    keyboard_init(ioapic);
+    mouse_init(ioapic);
     load_idt();
 }

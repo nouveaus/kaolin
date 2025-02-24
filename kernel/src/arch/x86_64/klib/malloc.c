@@ -4,7 +4,6 @@
 #include "klib.h"
 
 #define HEAP_START 0x01000000
-
 // needs to be <= 4096 bytes
 #define HEAP_INITIAL_SIZE 0x01000
 
@@ -23,9 +22,8 @@ struct heap_block {
 // We allocate a extra 16 bytes for this metadata
 // We always return the memory address 16 bytes after
 
-static void *heap_start = (void *) (KERNEL_MAPPING_ADDRESS | HEAP_START);
-static void *heap_end =
-        (void *) ((KERNEL_MAPPING_ADDRESS | HEAP_START) + HEAP_INITIAL_SIZE);
+static void *heap_start = NULL;
+static void *heap_end = NULL;
 
 static void *get_heap_address(struct heap_block *block);
 static struct heap_block *allocate_free_block(void *base, size_t size,
@@ -48,8 +46,10 @@ static struct heap_block *allocate_free_block(void *base, size_t size,
 }
 
 void heap_init(void) {
-    map_page(KERNEL_MAPPING_ADDRESS | HEAP_START, (uint64_t) HEAP_START,
-             PAGE_PRESENT | PAGE_WRITE | PAGE_CACHE_DISABLE);
+    // todo: check if page cache disable is needed
+    heap_start = kmap_page((void *) HEAP_START, PAGE_PRESENT | PAGE_RW | PAGE_CACHE_DISABLE);
+    heap_end = (void *) ((uint64_t) heap_start + HEAP_INITIAL_SIZE);
+
     allocate_free_block(heap_start, HEAP_INITIAL_SIZE, NULL, NULL);
     //  for expand heap
 }

@@ -15,7 +15,8 @@ set(COMPILE_OPTIONS
 add_library(drivers OBJECT
         src/arch/x86_64/drivers/keyboard/keyboard.c
         src/arch/x86_64/drivers/mouse/mouse.c
-        src/arch/x86_64/drivers/timer/timer.c
+        src/arch/x86_64/drivers/pci/pci.c
+        src/arch/x86_64/drivers/timer/apic.c
         src/arch/x86_64/klib/trap.c
 )
 

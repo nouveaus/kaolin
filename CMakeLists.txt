@@ -29,6 +29,8 @@ add_custom_target(run
                 -drive file=os.img,format=raw
                 -serial stdio
                 -device isa-debug-exit,iobase=0xf4,iosize=0x04
+                -netdev user,id=net0
+                -device virtio-net-pci,netdev=net0
                 -d int
                 -D qemu.log
         DEPENDS os)

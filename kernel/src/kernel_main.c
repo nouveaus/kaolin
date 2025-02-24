@@ -10,6 +10,7 @@
 #include "arch/x86_64/cpu/msr.h"
 #include "arch/x86_64/drivers/keyboard/keyboard.h"
 #include "arch/x86_64/drivers/mouse/mouse.h"
+#include "arch/x86_64/drivers/pci/pci.h"
 #include "arch/x86_64/drivers/timer/timer.h"
 #include "arch/x86_64/klib/klib.h"
 #include "arch/x86_64/memory/paging.h"
@@ -107,6 +108,9 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
     krintf("String: %s\n", str);
     free(str);
 
+    pci_scan();
+    puts("Finished scanning for PCI devices\n");
+    getc();
 
     char message[] = "X Hello world!\n";
 
@@ -117,7 +121,7 @@ void _Noreturn kernel_main(struct boot_parameters parameters) {
         // ! DONT USE FLOATS - THEY DONT WORK FOR SOME REASON
 
         krintf("%sThe number is: %d, ticks: %d, entry count: %d\n", message, 5,
-               get_timer_ticks(), parameters.address_range_count);
+               apic_timer_get_ticks(), parameters.address_range_count);
 
         vga_set_color(1 + (i % 6), VGA_COLOR_BLACK);
         //memmap_print_entries(parameters.address_range_count,
@@ -184,6 +188,16 @@ static void read_acpi(void) {
             krintf("APICIO address: %x\n", apicio_entry->ioapic_address);
         }
     }
+
+    // Currently I don't know how to get pcie
+    // working with the qemu so we are falling back to pci
+    /*
+    if (!mcfg_find()) {
+        puts("Could not find mcfg\n");
+        _die();
+    }
+    puts("Found mcfg\n");
+    */
 }
 
 static void setup_idt(void) {
